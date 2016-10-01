@@ -1,0 +1,6 @@
+include README.rst
+include README.md
+include CHANGES.rst
+recursive-exclude asynctask app.py
+recursive-exclude asynctask setup.py
+recursive-exclude asynctask monitor.py

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+if [ ! -f install ]; then
+    echo 'install must be run within its container folder' 1>&2
+    exit 1
+fi
+
+CURDIR=`pwd`
+OLDGOPATH="$GOPATH"
+OLDGOBIN="$GOPATH"
+
+export GOPATH="$CURDIR"
+export GOBIN="$CURDIR/bin"
+gofmt -w src
+# go get -u gopkg.in/pg.v4
+# go get -u github.com/gorilla/mux
+# go get -u github.com/gorilla/context
+# go install data
+# go install logger
+go install server
+go run script.go
+export GOPATH="$OLDGOPATH"
+export GOPATH="$OLDGOBIN"
+echo 'finished'

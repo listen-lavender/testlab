@@ -1,0 +1,6 @@
+framework module SimpleAppLibs {
+  umbrella header "SimpleAppLibs-umbrella.h"
+
+  export *
+  module * { export * }
+}
