@@ -10,8 +10,6 @@ asynctask/db.py
 
 # Getting started
 
-No example now.
-
 ## Installation
 
 To install asynctask, simply:
