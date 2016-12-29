@@ -1,0 +1,8 @@
+package: .
+import:
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson
+- package: gopkg.in/redis.v5
+  version: ~5.1.6
+- package: github.com/coocood/freecache
