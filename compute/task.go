@@ -1,69 +1,75 @@
 package compute
 
 import (
-    "fmt"
-    "time"
-    "sort"
+	"fmt"
+	"sort"
+	"time"
 )
 
-func TraversalCountry(prefix, curr_countries, handle func()){
-    for _, country := range(curr_countries){
-        liveZset := Fastjoin("", prefix, country)
-        liveZsetRef := Fastjoin("", prefix, country, ":ref")
-        go GenerateCache(country, liveZset, liveZsetRef, handle)
-    }
+func TraversalCountry(prefix string, curr_countries []string, handle func(string, int64, string, []string) (string, string, float64, string)) {
+	for _, country := range curr_countries {
+		liveZset := Fastjoin("", prefix, country)
+		liveZsetRef := Fastjoin("", prefix, country, ":ref")
+		// go GenerateCache(country, liveZset, liveZsetRef, handle)
+		GenerateCache(country, liveZset, liveZsetRef, handle)
+	}
 }
 
-func GenerateCache(country, liveZset, liveZsetRef, handle func()){
-    timestamp := time.Now().Unix() * 1000
-    related := []
-    normal := []
-    top := []
-    maxWeight := 0
+func GenerateCache(country string, liveZset string, liveZsetRef string, handle func(string, int64, string, []string) (string, string, float64, string)) {
+	timestamp := time.Now().Unix() * 1000
 
-    cfg = HitCfg(country)
+	cfg := HitCfg(country)
 
-    related_country = [country, ]
-    related_country = extend(related_country, cfg["config"]["country"])
+	refCountry := []string{country}
+	refCountry = append(refCountry, cfg.Config.Country...)
 
-    buffer := make(map[string]string)
-    buoys := make(map[string]float64)
+	bufferWeight := make(map[string][]float64)
+	bufferLiveid := make(map[string][]string)
+	buoys := make(map[string]float64)
 
-    for _, room_id := range(RoomidList()){
-        index, data := handle(int(room_id), timestamp, country, related_country)
-        if _, ok := buffer[index]; ok{
-            buffer[index] = append(buffer[index], data)
-            buoys[index] = data["weight"]
-        }else{
-            buffer[index] = [data, ]
-            buoys[index] = Max(buoys[index], data["weight"])
-        }
-    }
+	for _, roomid := range RoomidList() {
+		index, _, weight, liveid := handle(roomid, timestamp, country, refCountry)
+		if index == "" {
+			continue
+		}
+		if _, ok := buoys[index]; ok {
+			bufferWeight[index] = append(bufferWeight[index], weight)
+			bufferLiveid[index] = append(bufferLiveid[index], liveid)
+			buoys[index] = Max(buoys[index], weight)
+		} else {
+			bufferWeight[index] = []float64{weight}
+			bufferLiveid[index] = []string{liveid}
+			buoys[index] = weight
+		}
+	}
 
-    indexes := MapKeys(buffer)
-    length := len(indexes)
+	indexes := MapKeys(buoys)
+	length := len(indexes)
 
-    sort.Sort(sort.Reverse(sort.StringSlice(indexes)))
+	sort.Sort(sort.Reverse(sort.StringSlice(indexes)))
 
-    for index, key :=range(indexes){
-        if index > 0{
-            buoys[key] = buoys[key] + buoys[indexes[index - 1]]
-        }
-    }
+	for index, key := range indexes {
+		if index > 0 {
+			buoys[key] = buoys[key] + buoys[indexes[index-1]]
+		}
+	}
 
-    sort.Strings(indexes)
+	sort.Strings(indexes)
 
-    for indexOut, key :=range(indexes){
-        if (indexOut + 1) < length{
-            base := buoys[indexes[index + 1]]
-        }else{
-            base := 0
-        }
-        for indexIn, data := range(buffer[key]){
-            UpdateZset(liveZset, data["liveid"], data["weight"] + base)
-            UpdateZsetRef(liveZsetRef, data["liveid"], 1)
-        }
-    }
-    
-    ClearLiveid(liveZset, liveZsetRef)
+	var base float64
+	for indexOut, key := range indexes {
+		if (indexOut + 1) < length {
+			base = buoys[key]
+		} else {
+			base = 0.0
+		}
+		for indexIn, weight := range bufferWeight[key] {
+			fmt.Println(liveZset, bufferLiveid[key][indexIn], base+weight)
+			fmt.Println(liveZsetRef, bufferLiveid[key][indexIn], 1)
+			// UpdateZset(liveZset, bufferLiveid[key][indexIn], base + weight)
+			// UpdateZsetRef(liveZsetRef, bufferLiveid[key][indexIn], 1)
+		}
+	}
+
+	// ClearLiveid(liveZset, liveZsetRef)
 }

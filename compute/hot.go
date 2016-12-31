@@ -1,67 +1,53 @@
 package compute
 
-func Handle(room_id string, timestamp float64, country string, related_country []string){
-    online_men = OnlineCount()
-    user_like = LikeCount()
+import (
+	"strconv"
+)
 
-    live = HitLive(room_id, related_country)
-    if live == nil:
-        return nil
+func HandleHot(roomid string, timestamp int64, country string, refCountry []string) (string, string, float64, string) {
+	live, limitFactor, verifiedFactor, recommendFactor, unverified := HitLive(roomid, refCountry)
+	if live == nil {
+		return "", "", 0.0, ""
+	}
 
-    cfg = HitCfg(live.Country)
+	userid := strconv.Itoa(live.User_id)
+	user := HitUser(userid)
+	if user == nil {
+		return "", "", 0.0, ""
+	}
 
-    LIMIT_FACTOR = cfg["config"]["limit_factor"]
-    VERIFIED_FACTOR = cfg["config"]["verified_factor"]
-    RECOMMEND_FACTOR = cfg["config"]["recommend_factor"]
-    ONLINEMEN_FACTOR = cfg["config"]["onlinemen_factor"]
-    USER_LIKE_FACTOR = cfg["config"]["user_like_factor"]
-    TIME_FACTOR = cfg["config"]["time_factor"]
-    UNVERIFIED = cfg["config"]["unverified"]
+	var verifiedVal float64
 
-    user = HitUser(live.User_id)
-    if user == nil{
-        return nil
-    }
+	if user.Verified {
+		verifiedVal = verifiedFactor
+	} else {
+		verifiedVal = 0
+	}
 
-    if user.Verified{
-        verified_val = VERIFIED_FACTOR    
-    }else{
-        verified_val = 0
-    }
+	if unverified && verifiedVal == 0.0 {
+		return "", "", 0.0, ""
+	}
 
-    if UNVERIFIED && verified_val == 0{
-        return nil
-    }
+	var recommendVal float64
+	var ok bool
 
-    if recommend_val, ok := RECOMMEND_FACTOR[str(user.recommend_level)]; !ok{
-        recommend_val = 0
-    }
+	if recommendVal, ok = recommendFactor[HitUserIdentity(userid)]; !ok {
+		recommendVal = 0.0
+	}
 
-    now := time.Now().Unix()
-    elapse := (now - (live.T_publish | live.Created_at)/1000) / 60
-    for one := range(TIME_FACTOR):
-        if elapse >= float(one["min"]) && elapse < float(one["max"]){
-            extra = (online_men * ONLINEMEN_FACTOR + user_like * USER_LIKE_FACTOR) * (one["base"] + one["increase"] * elapse)
-            break
-        }
-    else{
-        extra = 0
-    }
+	weight := verifiedVal + recommendVal + live.Extra
 
-    weight := verified_val + recommend_val + extra
+	if weight < limitFactor {
+		return "", "", 0.0, ""
+	}
 
-    if weight < LIMIT_FACTOR{
-        return nil
-    }
+	recommendWeight := HitUserTop(userid)
 
-    if _, ok = live.country[related_country]; ok && !live.country == country{
-        return {"1":{"country":live.Country, "ele":(weight, live.Live_id)}}
-    }
-    else if user.recommend_wight > 0{
-        return {"2":{"country":live.Country, "ele":(user.Recommend_wight, live.Live_id)}}
-    }
-    else{
-        return {"3":{"country":live.Country, "ele":(weight, live.live_id)}}
-    }
+	if !(live.Country == country) {
+		return "3", live.Country, weight, strconv.Itoa(live.Live_id)
+	} else if recommendWeight > 0.0 {
+		return "1", live.Country, recommendWeight, strconv.Itoa(live.Live_id)
+	} else {
+		return "2", live.Country, weight, strconv.Itoa(live.Live_id)
+	}
 }
-

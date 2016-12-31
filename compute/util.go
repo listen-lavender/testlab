@@ -2,9 +2,7 @@ package compute
 
 import (
 	"encoding/json"
-	"github.com/coocood/freecache"
 	"fmt"
-	"strings"
 )
 
 func JsonDecode(str []byte) map[string]interface{} {
@@ -23,7 +21,6 @@ func JsonEncode(dict interface{}) []byte {
 		fmt.Println(err)
 		return nil
 	}
-	println(string(str))
 	return str
 }
 
@@ -45,7 +42,7 @@ func Fastjoin(separator string, args ...string) string {
 	return str
 }
 
-func MapKeys(data map[string]interface{}) []string {
+func MapKeys(data map[string]float64) []string {
 	keys := make([]string, 0, len(data))
 	for key, _ := range data {
 		keys = append(keys, key)
@@ -53,10 +50,20 @@ func MapKeys(data map[string]interface{}) []string {
 	return keys
 }
 
-func MapVals(data map[string]interface{}) []interface{} {
-	vals := make([]interface{}, 0, len(data))
-	for _, val := range data {
-		vals = append(vals, val)
+func IndexOf(obj string, list []string) int {
+	index := -1
+	var src string
+	for index, src = range list {
+		if obj == src {
+			return index
+		}
 	}
-	return vals
+	return index
+}
+
+func Max(a float64, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
 }
