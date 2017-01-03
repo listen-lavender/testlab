@@ -2,29 +2,39 @@ package compute
 
 import (
 	"encoding/json"
+	"time"
 	"fmt"
 )
 
 func JsonDecode(str []byte) map[string]interface{} {
+	if DEBUG{
+		defer trace("JsonDecode")()
+	}
 	var dict map[string]interface{}
 	err := json.Unmarshal(str, &dict)
 	if err != nil {
-		fmt.Println(err)
+		println(err)
 		return nil
 	}
 	return dict
 }
 
 func JsonEncode(dict interface{}) []byte {
+	if DEBUG{
+		defer trace("JsonEncode")()
+	}
 	str, err := json.Marshal(dict)
 	if err != nil {
-		fmt.Println(err)
+		println(err)
 		return nil
 	}
 	return str
 }
 
 func Fastjoin(separator string, args ...string) string {
+	if DEBUG{
+		defer trace("Fastjoin")()
+	}
 	last := len(args) - 1
 	if separator != "" {
 		for k := 0; k < last; k++ {
@@ -43,6 +53,9 @@ func Fastjoin(separator string, args ...string) string {
 }
 
 func MapKeys(data map[string]float64) []string {
+	if DEBUG{
+		defer trace("MapKeys")()
+	}
 	keys := make([]string, 0, len(data))
 	for key, _ := range data {
 		keys = append(keys, key)
@@ -51,6 +64,9 @@ func MapKeys(data map[string]float64) []string {
 }
 
 func IndexOf(obj string, list []string) int {
+	if DEBUG{
+		defer trace("IndexOf")()
+	}
 	index := -1
 	var src string
 	for index, src = range list {
@@ -66,4 +82,29 @@ func Max(a float64, b float64) float64 {
 		return a
 	}
 	return b
+}
+
+func trace(funcName string) func() {
+	start := time.Now()
+	return func() {
+		fmt.Printf("%s elapse: %s \n", funcName, time.Since(start))
+	}
+}
+
+func UpdateZsetMock(key string, val string, weight float64){
+	if false{
+		println(key, val, weight)
+	}
+}
+
+func UpdateZsetRefMock(key string, val string, weight float64){
+	if false{
+		println(key, val, weight)
+	}	
+}
+
+func ClearLiveidMock(liveZset string, liveZsetRef string){
+	if false{
+		println(liveZset, liveZsetRef)
+	}	
 }

@@ -4,16 +4,21 @@ import (
 	"strconv"
 )
 
-func HandleHot(roomid string, timestamp int64, country string, refCountry []string) (string, string, float64, string) {
+func HandleHot(roomid string, timestamp int64, country string, refCountry []string, collect chan *Packet) interface{}{
+	if DEBUG{
+		defer trace("HandleHot")()
+	}
 	live, limitFactor, verifiedFactor, recommendFactor, unverified := HitLive(roomid, refCountry)
-	if live == nil {
-		return "", "", 0.0, ""
+	if live.Live_id > 0 {
+		collect <- nil
+		return nil
 	}
 
 	userid := strconv.Itoa(live.User_id)
 	user := HitUser(userid)
-	if user == nil {
-		return "", "", 0.0, ""
+	if user.User_id > 0 {
+		collect <- nil
+		return nil
 	}
 
 	var verifiedVal float64
@@ -25,7 +30,8 @@ func HandleHot(roomid string, timestamp int64, country string, refCountry []stri
 	}
 
 	if unverified && verifiedVal == 0.0 {
-		return "", "", 0.0, ""
+		collect <- nil
+		return nil
 	}
 
 	var recommendVal float64
@@ -38,16 +44,35 @@ func HandleHot(roomid string, timestamp int64, country string, refCountry []stri
 	weight := verifiedVal + recommendVal + live.Extra
 
 	if weight < limitFactor {
-		return "", "", 0.0, ""
+		collect <- nil
+		return nil
 	}
 
 	recommendWeight := HitUserTop(userid)
 
+	var packet Packet
 	if !(live.Country == country) {
-		return "3", live.Country, weight, strconv.Itoa(live.Live_id)
+		packet = Packet{
+			Index:"3",
+			Country:live.Country,
+			Weight:weight,
+			Liveid:strconv.Itoa(live.Live_id),
+		}
 	} else if recommendWeight > 0.0 {
-		return "1", live.Country, recommendWeight, strconv.Itoa(live.Live_id)
+		packet = Packet{
+			Index:"1",
+			Country:live.Country,
+			Weight:recommendWeight,
+			Liveid:strconv.Itoa(live.Live_id),
+		}
 	} else {
-		return "2", live.Country, weight, strconv.Itoa(live.Live_id)
+		packet = Packet{
+			Index:"2",
+			Country:live.Country,
+			Weight:weight,
+			Liveid:strconv.Itoa(live.Live_id),
+		}
 	}
+	collect <- &packet
+	return nil
 }

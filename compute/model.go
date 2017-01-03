@@ -6,6 +6,13 @@ import (
 	"strconv"
 )
 
+type Packet struct {
+	Index string
+	Country string
+	Weight float64
+	Liveid string
+}
+
 type User struct {
 	User_id  int
 	Kitty_id int
@@ -25,6 +32,7 @@ type UserTop struct {
 type Live struct {
 	Live_id    int
 	User_id    int
+	Status     int
 	Country    string
 	Lang       string
 	T_publish  float64
@@ -50,24 +58,25 @@ type Config struct {
 }
 
 func NewUserTop(spec bson.M) *UserTop {
+	if DEBUG{
+		defer trace("NewUserTop")()
+	}
 	userTop := UserTop{}
 	userTopCo.Find(spec).One(&userTop)
-	if userTop.User_id == 0 {
-		return nil
-	}
 	return &userTop
 }
 
 func HitUserTop(userid string) float64 {
+	if DEBUG{
+		defer trace("HitUserTop")()
+	}
 	var userTop *UserTop
 	name := Fastjoin("", userid, "top")
 	result := GetCache(name)
 	if result == nil {
 		uid, _ := strconv.Atoi(userid)
-		userTop = NewUserTop(bson.M{"User_id": uid})
-		if userTop == nil {
-			userTop = &UserTop{}
-		} else {
+		userTop = NewUserTop(bson.M{"user_id": uid})
+		if userTop.User_id > 0 {
 			SetCache(name, userTop, 60*3)
 		}
 	} else {
@@ -78,24 +87,25 @@ func HitUserTop(userid string) float64 {
 }
 
 func NewUserIdentity(spec bson.M) *UserIdentity {
+	if DEBUG{
+		defer trace("NewUserIdentity")()
+	}
 	userIdentity := UserIdentity{}
 	userIdentityCo.Find(spec).One(&userIdentity)
-	if userIdentity.User_id == 0 {
-		return nil
-	}
 	return &userIdentity
 }
 
 func HitUserIdentity(userid string) string {
+	if DEBUG{
+		defer trace("HitUserIdentity")()
+	}
 	var userIdentity *UserIdentity
 	name := Fastjoin("", userid, "idt")
 	result := GetCache(name)
 	if result == nil {
 		uid, _ := strconv.Atoi(userid)
-		userIdentity = NewUserIdentity(bson.M{"User_id": uid})
-		if userIdentity == nil {
-			userIdentity = &UserIdentity{}
-		} else {
+		userIdentity = NewUserIdentity(bson.M{"user_id": uid})
+		if userIdentity.User_id > 0{
 			SetCache(name, userIdentity, 60*10)
 		}
 	} else {
@@ -106,32 +116,34 @@ func HitUserIdentity(userid string) string {
 }
 
 func NewUser(spec bson.M) *User {
+	if DEBUG{
+		defer trace("NewUser")()
+	}
 	user := &User{}
 	userCo.Find(spec).One(user)
 	// if user.User_id > 0{
-	//     userTop := NewUserTop(bson.M{"User_id": user.User_id})
+	//     userTop := NewUserTop(bson.M{"user_id": user.User_id})
 	//     user.Recommend_wight = userIdentity.Recommend_wight
-	//     userIdentity := NewUserIdentity(bson.M{"User_id": user.User_id})
+	//     userIdentity := NewUserIdentity(bson.M{"user_id": user.User_id})
 	//     user.Recommend_level = userIdentity.Recommend_level
 	// }else{
 	//     return nil
 	// }
-	if user.User_id == 0 {
-		return nil
-	}
 	return user
 }
 
 func HitUser(userid string) *User {
+	if DEBUG{
+		defer trace("HitUser")()
+	}
 	var user *User
 	result := GetCache(userid)
 	if result == nil {
 		uid, _ := strconv.Atoi(userid)
-		user = NewUser(bson.M{"User_id": uid})
-		if user == nil {
-			return user
+		user = NewUser(bson.M{"user_id": uid})
+		if user.User_id > 0 {
+			SetCache(userid, user, 3600*8)
 		}
-		SetCache(userid, user, 3600*8)
 	} else {
 		u, _ := result.(User)
 		user = &u
@@ -140,15 +152,21 @@ func HitUser(userid string) *User {
 }
 
 func NewLive(spec bson.M) *Live {
+	if DEBUG{
+		defer trace("NewLive")()
+	}
 	live := &Live{}
 	liveCo.Find(spec).One(live)
-	if live.Live_id == 0 {
-		return nil
+	if !(live.Status == 1){
+		live.Live_id = 0
 	}
 	return live
 }
 
 func HitLive(roomid string, belong []string) (*Live, float64, float64, map[string]float64, bool) {
+	if DEBUG{
+		defer trace("HitLive")()
+	}
 	var live *Live
 	var limitFactor float64
 	var verifiedFactor float64
@@ -162,7 +180,7 @@ func HitLive(roomid string, belong []string) (*Live, float64, float64, map[strin
 	if result == nil {
 		rid, _ := strconv.Atoi(roomid)
 		live = NewLive(bson.M{"room_id": rid})
-		if !(live == nil) {
+		if live.Live_id > 0 {
 			if live.Country == "" {
 				live.Country = "TH"
 			}
@@ -174,9 +192,9 @@ func HitLive(roomid string, belong []string) (*Live, float64, float64, map[strin
 		l, _ := result.(Live)
 		live = &l
 	}
-	if !(live == nil) {
+	if live.Live_id > 0 {
 		if len(belong) > 0 && IndexOf(live.Country, belong) == -1 {
-			live = nil
+			live.Live_id = 0
 		} else {
 			if !(limitFactor == 0.0) {
 				limitFactor, verifiedFactor, recommendFactor, unverified, _, _, _ = LiveFactor(live.Country)
@@ -187,6 +205,9 @@ func HitLive(roomid string, belong []string) (*Live, float64, float64, map[strin
 }
 
 func InitCfgList(spec bson.M, sortBy []string, limit int) {
+	if DEBUG{
+		defer trace("InitCfgList")()
+	}
 	var iterCfg *mgo.Iter
 	if limit == 0 && (sortBy == nil || len(sortBy) == 0) {
 		iterCfg = cfgCo.Find(spec).Iter()
@@ -212,21 +233,23 @@ func InitCfgList(spec bson.M, sortBy []string, limit int) {
 }
 
 func NewCfg(spec bson.M) *Cfg {
+	if DEBUG{
+		defer trace("NewCfg")()
+	}
 	cfg := &Cfg{}
 	cfgCo.Find(spec).One(cfg)
-	if cfg.Country == "" {
-		return nil
-	}
 	return cfg
 }
 
 func HitCfg(country string) *Cfg {
+	if DEBUG{
+		defer trace("HitCfg")()
+	}
 	var cfg *Cfg
 	result := GetCache(country)
 	if result == nil {
 		cfg = NewCfg(bson.M{"country": country})
-		if cfg == nil {
-			cfg = &Cfg{}
+		if cfg.Country == "" {
 			cfg.Country = country
 			cfg.Config = defaultCfg.Config
 		}

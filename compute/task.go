@@ -1,23 +1,55 @@
 package compute
 
 import (
-	"fmt"
 	"sort"
 	"time"
+	"sync"
 )
 
-func TraversalCountry(prefix string, curr_countries []string, handle func(string, int64, string, []string) (string, string, float64, string)) {
+var wg sync.WaitGroup
+
+func TraversalCountry(prefix string, curr_countries []string, handle func(string, int64, string, []string, chan *Packet)interface{}) {
+	if DEBUG{
+		defer trace("TraversalCountry")()
+	}
+	acc := 0
+	stop := false
+	feedback := make(chan int)
+	length := len(curr_countries)
 	for _, country := range curr_countries {
 		liveZset := Fastjoin("", prefix, country)
 		liveZsetRef := Fastjoin("", prefix, country, ":ref")
+		// wg.Add(1)
 		// go GenerateCache(country, liveZset, liveZsetRef, handle)
-		GenerateCache(country, liveZset, liveZsetRef, handle)
+		go GenerateCache(country, liveZset, liveZsetRef, feedback, handle)
+	}
+	// wg.Wait()
+	for {
+		select {
+		case <-feedback:
+			println(acc, length, "=====1")
+			acc = acc + 1
+			if acc >= length{
+				stop = true
+				break
+			}
+		}
+		if stop{
+			break
+		}
 	}
 }
 
-func GenerateCache(country string, liveZset string, liveZsetRef string, handle func(string, int64, string, []string) (string, string, float64, string)) {
+func GenerateCache(country string, liveZset string, liveZsetRef string, feedback chan int, handle func(string, int64, string, []string, chan *Packet) interface{}) {
+// func GenerateCache(country string, liveZset string, liveZsetRef string, handle func(string, int64, string, []string, chan *Packet) interface{}) {
+	if DEBUG{
+		defer trace("GenerateCache")()
+	}
 	timestamp := time.Now().Unix() * 1000
 
+	var length int
+	acc :=0
+	stop := false
 	cfg := HitCfg(country)
 
 	refCountry := []string{country}
@@ -27,49 +59,69 @@ func GenerateCache(country string, liveZset string, liveZsetRef string, handle f
 	bufferLiveid := make(map[string][]string)
 	buoys := make(map[string]float64)
 
-	for _, roomid := range RoomidList() {
-		index, _, weight, liveid := handle(roomid, timestamp, country, refCountry)
-		if index == "" {
-			continue
+	roomidList := RoomidList()
+	collect := make(chan *Packet)
+	length = len(roomidList)
+	for _, roomid := range roomidList {
+		go handle(roomid, timestamp, country, refCountry, collect)
+	}
+
+	for {
+		select {
+		case packet := <-collect:
+			acc = acc + 1
+			println(acc, length, country, "=====2")
+			if acc >= length{
+				stop = true
+			}
+			if packet == nil {
+				if stop{
+					break
+				}else{
+					continue
+				}
+			}
+			if _, ok := buoys[packet.Index]; ok {
+                bufferWeight[packet.Index] = append(bufferWeight[packet.Index], packet.Weight)
+                bufferLiveid[packet.Index] = append(bufferLiveid[packet.Index], packet.Liveid)
+                buoys[packet.Index] = Max(buoys[packet.Index], packet.Weight)
+            } else {
+                bufferWeight[packet.Index] = []float64{packet.Weight}
+                bufferLiveid[packet.Index] = []string{packet.Liveid}
+                buoys[packet.Index] = packet.Weight
+            }
 		}
-		if _, ok := buoys[index]; ok {
-			bufferWeight[index] = append(bufferWeight[index], weight)
-			bufferLiveid[index] = append(bufferLiveid[index], liveid)
-			buoys[index] = Max(buoys[index], weight)
-		} else {
-			bufferWeight[index] = []float64{weight}
-			bufferLiveid[index] = []string{liveid}
-			buoys[index] = weight
+		if stop{
+			break
 		}
 	}
 
-	indexes := MapKeys(buoys)
-	length := len(indexes)
+	inds := MapKeys(buoys)
+	length = len(inds)
 
-	sort.Sort(sort.Reverse(sort.StringSlice(indexes)))
+	sort.Sort(sort.Reverse(sort.StringSlice(inds)))
 
-	for index, key := range indexes {
-		if index > 0 {
-			buoys[key] = buoys[key] + buoys[indexes[index-1]]
+	for ind, key := range inds {
+		if ind > 0 {
+			buoys[key] = buoys[key] + buoys[inds[ind-1]]
 		}
 	}
 
-	sort.Strings(indexes)
+	sort.Strings(inds)
 
 	var base float64
-	for indexOut, key := range indexes {
-		if (indexOut + 1) < length {
+	for indOut, key := range inds {
+		if (indOut + 1) < length {
 			base = buoys[key]
 		} else {
 			base = 0.0
 		}
-		for indexIn, weight := range bufferWeight[key] {
-			fmt.Println(liveZset, bufferLiveid[key][indexIn], base+weight)
-			fmt.Println(liveZsetRef, bufferLiveid[key][indexIn], 1)
-			// UpdateZset(liveZset, bufferLiveid[key][indexIn], base + weight)
-			// UpdateZsetRef(liveZsetRef, bufferLiveid[key][indexIn], 1)
+		for indIn, weight := range bufferWeight[key] {
+			UpdateZsetMock(liveZset, bufferLiveid[key][indIn], base + weight)
+			UpdateZsetRefMock(liveZsetRef, bufferLiveid[key][indIn], 1)
 		}
 	}
-
-	// ClearLiveid(liveZset, liveZsetRef)
+	ClearLiveidMock(liveZset, liveZsetRef)
+	// wg.Done()
+	feedback <- 1
 }

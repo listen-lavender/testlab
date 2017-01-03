@@ -12,9 +12,9 @@ var buffer bytes.Buffer
 var cacheSize int
 var cachePool *freecache.Cache
 
-const URL = "mongodb://kitty:e5lSUCuDmoZE25Tx5BdO@172.31.15.69:31007/admin"
-const ADDR = "172.31.0.74:6379"
-const PWD = "4229e03326a029b60d839ab0a063fe85d3849f45a9b908cd013f3808d602d06b"
+const URL = "mongodb://user:passwd@host:port/admin"
+const ADDR = "host:port"
+const PWD = "pwd"
 const DB = 0
 const HotRoomSet = "room:hot"
 const NewRoomSet = "room:new"
@@ -29,6 +29,8 @@ var cfgCo *mgo.Collection
 var client *redis.Client
 var expire int
 var defaultCfg *Cfg
+var CACHE map[string][]byte
+var DEBUG bool
 
 func init() {
 	cacheSize = 100 * 1024 * 1024
@@ -56,5 +58,7 @@ func init() {
 		DB:       DB,
 	})
 
+	CACHE = make(map[string][]byte)
+	DEBUG = false
 	InitCfgList(nil, nil, 0)
 }
