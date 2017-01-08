@@ -8,14 +8,18 @@ func HandleHot(roomid string, timestamp int64, country string, refCountry []stri
 	if DEBUG{
 		defer trace("HandleHot")()
 	}
-	live, limitFactor, verifiedFactor, recommendFactor, unverified := HitLive(roomid, refCountry)
+	lsession := gsession.Clone()
+	defer lsession.Close()
+	
+	db := lsession.DB("kittylive")
+	live, limitFactor, verifiedFactor, recommendFactor, unverified := HitLive(roomid, refCountry, db)
 	if live.Live_id > 0 {
 		collect <- nil
 		return nil
 	}
 
 	userid := strconv.Itoa(live.User_id)
-	user := HitUser(userid)
+	user := HitUser(userid, db)
 	if user.User_id > 0 {
 		collect <- nil
 		return nil
@@ -37,7 +41,7 @@ func HandleHot(roomid string, timestamp int64, country string, refCountry []stri
 	var recommendVal float64
 	var ok bool
 
-	if recommendVal, ok = recommendFactor[HitUserIdentity(userid)]; !ok {
+	if recommendVal, ok = recommendFactor[HitUserIdentity(userid, db)]; !ok {
 		recommendVal = 0.0
 	}
 
@@ -48,7 +52,7 @@ func HandleHot(roomid string, timestamp int64, country string, refCountry []stri
 		return nil
 	}
 
-	recommendWeight := HitUserTop(userid)
+	recommendWeight := HitUserTop(userid, db)
 
 	var packet Packet
 	if !(live.Country == country) {

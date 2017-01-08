@@ -1,18 +1,17 @@
 package compute
 
 import (
-	"bytes"
 	"github.com/coocood/freecache"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/redis.v5"
 	"runtime/debug"
+	// "time"
 )
 
-var buffer bytes.Buffer
 var cacheSize int
 var cachePool *freecache.Cache
 
-const URL = "mongodb://user:passwd@host:port/admin"
+const URL = "mongodb://user:passwd@host:port/authdb"
 const ADDR = "host:port"
 const PWD = "pwd"
 const DB = 0
@@ -20,12 +19,7 @@ const HotRoomSet = "room:hot"
 const NewRoomSet = "room:new"
 const CountryRoomSet = "country:hot"
 
-var userCo *mgo.Collection
-var userIdentityCo *mgo.Collection
-var userTopCo *mgo.Collection
-var liveCo *mgo.Collection
-var cfgCo *mgo.Collection
-
+var gsession *mgo.Session
 var client *redis.Client
 var expire int
 var defaultCfg *Cfg
@@ -38,19 +32,22 @@ func init() {
 	debug.SetGCPercent(20)
 	expire = 20
 
-	session, err := mgo.Dial(URL)
+    var err error
+	gsession, err = mgo.Dial(URL)
+	// gsession, err = mgo.DialWithInfo(&mgo.DialInfo{
+	// 	Addrs:    []string{"host:port"},
+	// 	Timeout:  60 * time.Second,
+	// 	Database: "authdb",
+	// 	Username: "user",
+	// 	Password: "passwd",
+	// })
+
 	if err != nil {
 		panic(err)
 	}
-	// defer session.Close()
-	session.SetMode(mgo.Monotonic, true)
-
-	db := session.DB("kittylive")
-	userCo = db.C("user")
-	userIdentityCo = db.C("userIdentity")
-	userTopCo = db.C("userTop")
-	liveCo = db.C("live")
-	cfgCo = db.C("hotcfg")
+	// defer gsession.Close()
+	gsession.SetPoolLimit(100)
+	gsession.SetMode(mgo.Monotonic, true)
 
 	client = redis.NewClient(&redis.Options{
 		Addr:     ADDR,

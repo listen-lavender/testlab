@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"bytes"
 	"encoding/json"
 	"time"
 	"fmt"
@@ -35,6 +36,7 @@ func Fastjoin(separator string, args ...string) string {
 	if DEBUG{
 		defer trace("Fastjoin")()
 	}
+	var buffer bytes.Buffer
 	last := len(args) - 1
 	if separator != "" {
 		for k := 0; k < last; k++ {
@@ -79,6 +81,13 @@ func IndexOf(obj string, list []string) int {
 
 func Max(a float64, b float64) float64 {
 	if a > b {
+		return a
+	}
+	return b
+}
+
+func Min(a int, b int) int {
+	if a < b {
 		return a
 	}
 	return b

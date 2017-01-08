@@ -14,7 +14,7 @@ func TraversalCountry(prefix string, curr_countries []string, handle func(string
 	}
 	acc := 0
 	stop := false
-	feedback := make(chan int)
+	feedback := make(chan int, 100)
 	length := len(curr_countries)
 	for _, country := range curr_countries {
 		liveZset := Fastjoin("", prefix, country)
@@ -27,7 +27,6 @@ func TraversalCountry(prefix string, curr_countries []string, handle func(string
 	for {
 		select {
 		case <-feedback:
-			println(acc, length, "=====1")
 			acc = acc + 1
 			if acc >= length{
 				stop = true
@@ -50,7 +49,7 @@ func GenerateCache(country string, liveZset string, liveZsetRef string, feedback
 	var length int
 	acc :=0
 	stop := false
-	cfg := HitCfg(country)
+	cfg := GetCfg(country)
 
 	refCountry := []string{country}
 	refCountry = append(refCountry, cfg.Config.Country...)
@@ -60,9 +59,13 @@ func GenerateCache(country string, liveZset string, liveZsetRef string, feedback
 	buoys := make(map[string]float64)
 
 	roomidList := RoomidList()
-	collect := make(chan *Packet)
+	collect := make(chan *Packet, 1000)
 	length = len(roomidList)
+	// length = Min(length, 500)
 	for _, roomid := range roomidList {
+		// if abc > 500{
+		// 	break
+		// }
 		go handle(roomid, timestamp, country, refCountry, collect)
 	}
 
@@ -70,7 +73,6 @@ func GenerateCache(country string, liveZset string, liveZsetRef string, feedback
 		select {
 		case packet := <-collect:
 			acc = acc + 1
-			println(acc, length, country, "=====2")
 			if acc >= length{
 				stop = true
 			}

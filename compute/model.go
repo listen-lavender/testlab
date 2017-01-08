@@ -57,16 +57,17 @@ type Config struct {
 	Unverified       bool
 }
 
-func NewUserTop(spec bson.M) *UserTop {
+func NewUserTop(spec bson.M, db *mgo.Database) *UserTop {
 	if DEBUG{
 		defer trace("NewUserTop")()
 	}
 	userTop := UserTop{}
+	userTopCo := db.C("userTop")
 	userTopCo.Find(spec).One(&userTop)
 	return &userTop
 }
 
-func HitUserTop(userid string) float64 {
+func HitUserTop(userid string, db *mgo.Database) float64 {
 	if DEBUG{
 		defer trace("HitUserTop")()
 	}
@@ -75,7 +76,7 @@ func HitUserTop(userid string) float64 {
 	result := GetCache(name)
 	if result == nil {
 		uid, _ := strconv.Atoi(userid)
-		userTop = NewUserTop(bson.M{"user_id": uid})
+		userTop = NewUserTop(bson.M{"user_id": uid}, db)
 		if userTop.User_id > 0 {
 			SetCache(name, userTop, 60*3)
 		}
@@ -86,16 +87,17 @@ func HitUserTop(userid string) float64 {
 	return userTop.Recommend_wight
 }
 
-func NewUserIdentity(spec bson.M) *UserIdentity {
+func NewUserIdentity(spec bson.M, db *mgo.Database) *UserIdentity {
 	if DEBUG{
 		defer trace("NewUserIdentity")()
 	}
 	userIdentity := UserIdentity{}
+	userIdentityCo := db.C("userIdentity")
 	userIdentityCo.Find(spec).One(&userIdentity)
 	return &userIdentity
 }
 
-func HitUserIdentity(userid string) string {
+func HitUserIdentity(userid string, db *mgo.Database) string {
 	if DEBUG{
 		defer trace("HitUserIdentity")()
 	}
@@ -104,7 +106,7 @@ func HitUserIdentity(userid string) string {
 	result := GetCache(name)
 	if result == nil {
 		uid, _ := strconv.Atoi(userid)
-		userIdentity = NewUserIdentity(bson.M{"user_id": uid})
+		userIdentity = NewUserIdentity(bson.M{"user_id": uid}, db)
 		if userIdentity.User_id > 0{
 			SetCache(name, userIdentity, 60*10)
 		}
@@ -115,11 +117,12 @@ func HitUserIdentity(userid string) string {
 	return userIdentity.Recommend_level
 }
 
-func NewUser(spec bson.M) *User {
+func NewUser(spec bson.M, db *mgo.Database) *User {
 	if DEBUG{
 		defer trace("NewUser")()
 	}
 	user := &User{}
+	userCo := db.C("user")
 	userCo.Find(spec).One(user)
 	// if user.User_id > 0{
 	//     userTop := NewUserTop(bson.M{"user_id": user.User_id})
@@ -132,7 +135,7 @@ func NewUser(spec bson.M) *User {
 	return user
 }
 
-func HitUser(userid string) *User {
+func HitUser(userid string, db *mgo.Database) *User {
 	if DEBUG{
 		defer trace("HitUser")()
 	}
@@ -140,7 +143,7 @@ func HitUser(userid string) *User {
 	result := GetCache(userid)
 	if result == nil {
 		uid, _ := strconv.Atoi(userid)
-		user = NewUser(bson.M{"user_id": uid})
+		user = NewUser(bson.M{"user_id": uid}, db)
 		if user.User_id > 0 {
 			SetCache(userid, user, 3600*8)
 		}
@@ -151,11 +154,12 @@ func HitUser(userid string) *User {
 	return user
 }
 
-func NewLive(spec bson.M) *Live {
+func NewLive(spec bson.M, db *mgo.Database) *Live {
 	if DEBUG{
 		defer trace("NewLive")()
 	}
 	live := &Live{}
+	liveCo := db.C("live")
 	liveCo.Find(spec).One(live)
 	if !(live.Status == 1){
 		live.Live_id = 0
@@ -163,7 +167,7 @@ func NewLive(spec bson.M) *Live {
 	return live
 }
 
-func HitLive(roomid string, belong []string) (*Live, float64, float64, map[string]float64, bool) {
+func HitLive(roomid string, belong []string, db *mgo.Database) (*Live, float64, float64, map[string]float64, bool) {
 	if DEBUG{
 		defer trace("HitLive")()
 	}
@@ -179,12 +183,12 @@ func HitLive(roomid string, belong []string) (*Live, float64, float64, map[strin
 	result := GetCache(roomid)
 	if result == nil {
 		rid, _ := strconv.Atoi(roomid)
-		live = NewLive(bson.M{"room_id": rid})
+		live = NewLive(bson.M{"room_id": rid}, db)
 		if live.Live_id > 0 {
 			if live.Country == "" {
 				live.Country = "TH"
 			}
-			limitFactor, verifiedFactor, recommendFactor, unverified, onlineFactor, likeFactor, giftFactor = LiveFactor(live.Country)
+			limitFactor, verifiedFactor, recommendFactor, unverified, onlineFactor, likeFactor, giftFactor = LiveFactor(live.Country, db)
 			live.Extra = ComputeExtra(roomid, onlineFactor, likeFactor, giftFactor)
 			SetCache(roomid, live, 60)
 		}
@@ -197,7 +201,7 @@ func HitLive(roomid string, belong []string) (*Live, float64, float64, map[strin
 			live.Live_id = 0
 		} else {
 			if !(limitFactor == 0.0) {
-				limitFactor, verifiedFactor, recommendFactor, unverified, _, _, _ = LiveFactor(live.Country)
+				limitFactor, verifiedFactor, recommendFactor, unverified, _, _, _ = LiveFactor(live.Country, db)
 			}
 		}
 	}
@@ -208,6 +212,11 @@ func InitCfgList(spec bson.M, sortBy []string, limit int) {
 	if DEBUG{
 		defer trace("InitCfgList")()
 	}
+	lsession := gsession.Clone()
+	defer lsession.Close()
+
+	db := lsession.DB("kittylive")
+	cfgCo := db.C("hotcfg")
 	var iterCfg *mgo.Iter
 	if limit == 0 && (sortBy == nil || len(sortBy) == 0) {
 		iterCfg = cfgCo.Find(spec).Iter()
@@ -232,23 +241,24 @@ func InitCfgList(spec bson.M, sortBy []string, limit int) {
 	}
 }
 
-func NewCfg(spec bson.M) *Cfg {
+func NewCfg(spec bson.M, db *mgo.Database) *Cfg {
 	if DEBUG{
 		defer trace("NewCfg")()
 	}
 	cfg := &Cfg{}
+	cfgCo := db.C("hotcfg")
 	cfgCo.Find(spec).One(cfg)
 	return cfg
 }
 
-func HitCfg(country string) *Cfg {
+func HitCfg(country string, db *mgo.Database) *Cfg {
 	if DEBUG{
 		defer trace("HitCfg")()
 	}
 	var cfg *Cfg
 	result := GetCache(country)
 	if result == nil {
-		cfg = NewCfg(bson.M{"country": country})
+		cfg = NewCfg(bson.M{"country": country}, db)
 		if cfg.Country == "" {
 			cfg.Country = country
 			cfg.Config = defaultCfg.Config
@@ -259,4 +269,12 @@ func HitCfg(country string) *Cfg {
 		cfg = &c
 	}
 	return cfg
+}
+
+func GetCfg(country string) *Cfg {
+    lsession := gsession.Clone()
+	defer lsession.Close()
+
+	db := lsession.DB("kittylive")
+	return HitCfg(country, db)
 }

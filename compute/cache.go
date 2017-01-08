@@ -3,6 +3,7 @@ package compute
 import (
 	"gopkg.in/redis.v5"
 	"strconv"
+	"gopkg.in/mgo.v2"
 )
 
 func OnlineCount(roomid string) int64 {
@@ -31,11 +32,11 @@ func GiftCount(roomid string) int {
 	return total
 }
 
-func LiveFactor(country string) (float64, float64, map[string]float64, bool, float64, float64, float64) {
+func LiveFactor(country string, db *mgo.Database) (float64, float64, map[string]float64, bool, float64, float64, float64) {
 	if DEBUG{
 		defer trace("LikeFactor")()
 	}
-	cfg := HitCfg(country)
+	cfg := HitCfg(country, db)
 	limitFactor := cfg.Config.Limit_factor
 	verifiedFactor := cfg.Config.Verified_factor
 	recommendFactor := cfg.Config.Recommend_factor
