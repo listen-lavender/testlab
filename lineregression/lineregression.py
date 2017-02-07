@@ -2,7 +2,7 @@
 """
 Created on Wed Sep 19 18:45:05 2016
 
-@author: kanungo
+@author: haokuan
 """
 
 # results in warning if kept here, so moved up
