@@ -1,0 +1,31 @@
+<html>
+<header>
+	<title> http csrf demo </title>
+	<script>
+		function ajaxget() {
+		    url = "http://localhost:8888/polling?ajax_get";
+		    var request = new XMLHttpRequest();
+			request.open("GET", url, false);
+			request.send(null);
+		}
+		function testform() {
+		    url = "http://localhost:8888/polling?ajax_post";
+		    var request = new XMLHttpRequest();
+			request.open("POST", url, false);
+			request.send(null);
+			return false;
+		}
+		window.onload = function(){
+			ajaxget()
+	    }
+	</script>
+</header>
+<body>
+	<img src="http://localhost:8888/polling?img_src"/>
+	<form onsubmit="return testform()">
+	  <button type="submit">evil way</button>
+	</form>
+	<iframe src="demo3.html">
+	</iframe>
+</body>
+</html>

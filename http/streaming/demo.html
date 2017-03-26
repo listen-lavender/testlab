@@ -1,0 +1,27 @@
+<html>
+<header>
+	<title> http streaming demo </title>
+	<script>
+		function streaming(){
+		    var request = new XMLHttpRequest();
+			var pos = 0;
+			request.onreadystatechange = function () {
+			    if (request.readyState === 3) {
+			        var data = request.responseText;
+			        document.getElementById("demo").innerText = document.getElementById("demo").innerText + data.substring(pos, data.length);
+			        pos = data.length;
+			    }
+			};
+			request.open("POST", "http://localhost:8888/streaming", true);
+			request.send(null);
+		}
+
+		window.onload = function(){
+			streaming();
+	    }
+	</script>
+</header>
+<body>
+	<div id="demo"></div>
+</body>
+</html>

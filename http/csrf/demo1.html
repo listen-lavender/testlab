@@ -1,0 +1,19 @@
+<html>
+<header>
+	<title> http csrf demo </title>
+	<script>
+		function polling(url){
+		    var request = new XMLHttpRequest();
+			request.open("GET", url, false);
+			request.send(null);
+		}
+		window.onload = function(){
+			polling("http://localhost:8888/polling");
+			polling("http://127.0.0.1:9999/polling");
+	    }
+	</script>
+</header>
+<body>
+	<a target="_blank" href="http://127.0.0.1:9999/static/demo2.html">evil way</a>
+</body>
+</html>
