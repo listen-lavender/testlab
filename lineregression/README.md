@@ -1,3 +1,4 @@
+````bash
 $ python lineregression.py sampledata
 x0 = 0.89
 x1 = 0.28
@@ -30,4 +31,4 @@ $ python lineregression.py sampledata ­-p
 
 $ python lineregression.py sampledata ­-o result.txt
 将verbose生成result.txt
-
+````
