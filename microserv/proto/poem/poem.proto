@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package poem;
+
+service Poem {
+    rpc AddAuthor (Author) returns (EmptyResponse) {}
+    rpc DelAuthor (Author) returns (EmptyResponse) {}
+    rpc UpdateAuthor (Author) returns (EmptyResponse) {}
+    rpc GetOneAuthor (OneAuthorRequest) returns (OneAuthorResponse) {}
+
+    rpc AddPoem (PoemRecord) returns (EmptyResponse) {}
+    rpc DelPoem (PoemRecord) returns (EmptyResponse) {}
+    rpc UpdatePoem (PoemRecord) returns (EmptyResponse) {}
+    rpc GetOnePoem (OnePoemRequest) returns (OnePoemResponse) {}
+    rpc GetPoems (PoemsRequest) returns (PoemsResponse) {}
+}
+
+message PoemRecord {
+    int64 id = 1;
+    int64 authorId = 2;
+    string title = 3;
+    string content = 4;
+}
+
+message Author {
+    int64 id = 1;
+    string name = 2;
+    int64 age = 3;
+    int64 sex = 4;
+}
+
+message OneAuthorRequest {
+    int64 id = 1;
+}
+
+message OneAuthorResponse {
+    Status stat = 1;
+    Author data = 2;
+}
+
+message PoemInfo {
+    int64 id = 1;
+    string title = 2;
+    string content = 3;
+    Author author = 4;
+}
+
+message Status {
+    int64 code = 1;
+    string msg = 2;
+}
+
+message EmptyResponse {
+    Status stat = 1;
+}
+
+message OnePoemRequest{
+    int64 id = 1;
+}
+
+message OnePoemResponse {
+    Status stat = 1;
+    PoemInfo data = 2;
+}
+
+message Rangen {
+    int64 page = 1;
+    int64 size = 2;
+}
+
+message PoemsRequest {
+    Rangen rangen = 1; 
+    int64 authorId = 2;
+    string title = 3;
+}
+
+message PoemsResponse {
+    Status stat = 1;
+    repeated PoemInfo data = 2;
+}
+
