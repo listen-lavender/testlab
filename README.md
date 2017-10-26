@@ -4,7 +4,7 @@ a project of celery
 a project of ios
 # lineregression
 a project of numpy
-# lineregression
+# muxpgtest
 a project of mux and go-pg
 # http
 a project of http related technology test
