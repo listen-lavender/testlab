@@ -6,6 +6,8 @@ a project of celery
 a project of realtime computing
 # firstios
 a project of ios
+# flaskblueprint
+a project of flask blueprint introducing
 # http
 a project of test csrf, http2, long polling, pipeline, streaming, websocket about http
 # lineregression
