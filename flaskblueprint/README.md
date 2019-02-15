@@ -38,3 +38,7 @@ delete http://127.0.0.1:5000/comment/1 {"aid":3, "uid":2}
 get http://127.0.0.1:5000/user
 
 get http://127.0.0.1:5000/user/1
+
+---
+
+有一段flask蓝图课程视频，第一次录，多多包涵。
