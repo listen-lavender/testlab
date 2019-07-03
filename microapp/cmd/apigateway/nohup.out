@@ -1,0 +1,13 @@
+ts=2017-09-12T11:10:52.867013429Z caller=main.go:84 transport=debug addr=:6060
+ts=2017-09-12T11:10:52.866882543Z caller=subscriber.go:39 prefix=/services/feed err="client: etcd cluster is unavailable or misconfigured; error #0: unsupported protocol scheme \"localhost\"\n; error #1: unsupported protocol scheme \"localhost\"\n; error #2: unsupported protocol scheme \"localhost\"\n"
+ts=2017-09-12T11:10:52.8671675Z caller=subscriber.go:39 prefix=/services/feed err="client: etcd cluster is unavailable or misconfigured; error #0: unsupported protocol scheme \"localhost\"\n; error #1: unsupported protocol scheme \"localhost\"\n; error #2: unsupported protocol scheme \"localhost\"\n"
+ts=2017-09-12T11:10:52.867204507Z caller=subscriber.go:39 prefix=/services/profile err="client: etcd cluster is unavailable or misconfigured; error #0: unsupported protocol scheme \"localhost\"\n; error #1: unsupported protocol scheme \"localhost\"\n; error #2: unsupported protocol scheme \"localhost\"\n"
+ts=2017-09-12T11:10:52.867239568Z caller=subscriber.go:39 prefix=/services/topic err="client: etcd cluster is unavailable or misconfigured; error #0: unsupported protocol scheme \"localhost\"\n; error #1: unsupported protocol scheme \"localhost\"\n; error #2: unsupported protocol scheme \"localhost\"\n"
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /api/feed/get_feeds       --> github.com/buptmiao/microservice-app/apigateway.GetFeeds (1 handlers)
+[GIN-debug] PUT    /api/feed/create_feed     --> github.com/buptmiao/microservice-app/apigateway.CreateFeed (1 handlers)
+[GIN-debug] GET    /api/profile/get_profile  --> github.com/buptmiao/microservice-app/apigateway.GetProfile (1 handlers)
+[GIN-debug] GET    /api/topic/view           --> github.com/buptmiao/microservice-app/apigateway.view (1 handlers)

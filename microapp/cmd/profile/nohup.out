@@ -1,0 +1,6 @@
+# github.com/buptmiao/microservice-app/profile
+/usr/local/Cellar/go/1.9/src/github.com/buptmiao/microservice-app/profile/middleware.go:70:38: too many arguments in call to "github.com/go-kit/kit/transport/grpc".NewServer
+	have ("context".Context, endpoint.Endpoint, func("context".Context, interface {}) (interface {}, error), func("context".Context, interface {}) (interface {}, error), []"github.com/go-kit/kit/transport/grpc".ServerOption...)
+	want (endpoint.Endpoint, "github.com/go-kit/kit/transport/grpc".DecodeRequestFunc, "github.com/go-kit/kit/transport/grpc".EncodeResponseFunc, ..."github.com/go-kit/kit/transport/grpc".ServerOption)
+ts=2017-09-12T11:03:38.272435614Z caller=main.go:110 service=profile addr=localhost:8083
+ts=2017-09-12T11:03:38.272514374Z caller=main.go:126 service=profile transport=debug addr=:6063

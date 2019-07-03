@@ -1,0 +1,2 @@
+ts=2017-09-12T11:01:57.386163816Z caller=main.go:108 service=feed addr=localhost:8082
+ts=2017-09-12T11:01:57.386240004Z caller=main.go:124 service=feed transport=debug addr=:6062
