@@ -9,7 +9,7 @@ type Action struct {
 
 type Reducer func(State, Action) State
 
-func reducer(oldState State, action Action) State {
+func multiReducer(oldState State, action Action) State {
     var newState State
     if action.Type == "add" {
         newState = oldState + action.state
@@ -18,6 +18,12 @@ func reducer(oldState State, action Action) State {
     } else {
         newState = action.state
     }
+    return newState
+}
+
+func addReducer(oldState State, action Action) State {
+    var newState State
+    newState = oldState + action.state
     return newState
 }
 
@@ -35,7 +41,8 @@ func redux(reducer Reducer, init State) (func(Action), func() State) {
 }
 
 func main(){
-    dispatch, getState := redux(reducer, 0)
+    dispatch, getState := redux(multiReducer, 0)
+    dispatch, getState = redux(addReducer, 0)
     dispatch(Action{
         Type:  "add",
         state: 1,
