@@ -1,3 +1,7 @@
+# promise
+promise implemented by golang
+# redux
+redux implemented by golang
 # airflow
 a project of DAG task
 # asynctask
