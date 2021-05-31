@@ -19,12 +19,16 @@ func findMissA(limit int, nums []int) ([]int, error) {
 		return res, nil
 	}
 	beyond := (limit + 1)
+	extraLen := 0
 	for _, val := range nums {
+		if val > len(nums) {
+			extraLen = extraLen + 1
+		}
 		if val > limit {
 			return []int{}, errors.New("beyond index")
 		}
 	}
-	extra := make(map[int]struct{}, limit-len(nums))
+	extra := make(map[int]struct{}, extraLen)
 	for ind, val := range nums {
 		i := val%beyond - 1
 		if i < 0 {
