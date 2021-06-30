@@ -203,7 +203,7 @@ fn init_rightside_tree() -> Option<Rc<RefCell<TreeNode>>> {
     return Some(root)
 }
 
-fn init_balance_tree() -> Option<Rc<RefCell<TreeNode>>> {
+fn init_prebalance_tree() -> Option<Rc<RefCell<TreeNode>>> {
     let root = TreeNode::new(1);
     
     {
@@ -237,6 +237,56 @@ fn init_balance_tree() -> Option<Rc<RefCell<TreeNode>>> {
 
     {
         let left_node = TreeNode::new(6);
+        left_node.borrow_mut().left = None;
+        left_node.borrow_mut().right = None;
+
+        let right_node = TreeNode::new(7);
+        right_node.borrow_mut().left = None;
+        right_node.borrow_mut().right = None;
+
+        let node = root.borrow();
+        let mut node = node.right.as_ref().unwrap().borrow_mut();
+        node.left = Some(left_node);
+        node.right = Some(right_node);
+    }
+
+    return Some(root)
+}
+
+fn init_inbalance_tree() -> Option<Rc<RefCell<TreeNode>>> {
+    let root = TreeNode::new(4);
+    
+    {
+        let left_node = TreeNode::new(2);
+        left_node.borrow_mut().left = None;
+        left_node.borrow_mut().right = None;
+
+        let right_node = TreeNode::new(6);
+        right_node.borrow_mut().left = None;
+        right_node.borrow_mut().right = None;
+
+        let mut node = root.borrow_mut();
+        node.left = Some(left_node);
+        node.right = Some(right_node);
+    }
+
+    {
+        let left_node = TreeNode::new(1);
+        left_node.borrow_mut().left = None;
+        left_node.borrow_mut().right = None;
+
+        let right_node = TreeNode::new(3);
+        right_node.borrow_mut().left = None;
+        right_node.borrow_mut().right = None;
+
+        let node = root.borrow();
+        let mut node = node.left.as_ref().unwrap().borrow_mut();
+        node.left = Some(left_node);
+        node.right = Some(right_node);
+    }
+
+    {
+        let left_node = TreeNode::new(5);
         left_node.borrow_mut().left = None;
         left_node.borrow_mut().right = None;
 
@@ -464,13 +514,13 @@ fn main() {
     test_build_tree("leftside", init_leftside_tree());
     test_build_tree("rightside", init_rightside_tree());
     test_build_tree("bothside", init_bothside_tree());
-    test_build_tree("balance", init_balance_tree());
+    test_build_tree("balance", init_prebalance_tree());
     test_tree_max_value_path("empty", init_empty_tree());
     test_tree_max_value_path("onenode", init_onenode_tree());
     test_tree_max_value_path("leftside", init_leftside_tree());
     test_tree_max_value_path("rightside", init_rightside_tree());
     test_tree_max_value_path("bothside", init_bothside_tree());
-    test_tree_max_value_path("balance", init_balance_tree());
+    test_tree_max_value_path("balance", init_prebalance_tree());
 }
 
 // This paper summarizes the relation of the three different array through the analysis of getting three different array from the same tree using three different algorithm: preorder traversal, inorder traversal and postorder traversal. 
