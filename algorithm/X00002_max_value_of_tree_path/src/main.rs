@@ -382,34 +382,6 @@ fn store_tree(root: Option<Rc<RefCell<TreeNode>>>) -> TreeStore {
     ts
 }
 
-// TreeNode buildTree(int[] preorder, int preStart, int preEnd,
-//     int[] inorder, int inStart, int inEnd, Map<Integer, Integer> inMa
-//     p) {
-
-// fn bst_search(node:&Rc<RefCell<TreeNode>>,key:u32) -> Option<String>{
-//     let mut result:Option<String> = None;
-//     //println!("search {} {}",key,node.borrow().key);
-//     if key == node.borrow().key {
-//         if node.borrow().vaild {
-//             return Some(node.borrow().value.clone());
-//         }else {
-//             return None;
-//         }
-//     }
-//     else if key < node.borrow().key{
-//         if let Some(ref n) = node.borrow().left {
-//             result = bst_search(n,key);
-//         }
-//     }
-//     else {
-//         if let Some(ref n) = node.borrow().right {
-//             result = bst_search(n,key);
-//         }
-//     }
-//     //println!("res {:?}",result);
-//     result
-// }
-
 fn bar(mut v:[u32;3])->[u32;3]{
     v[0] = 3;
     assert_eq!([3,2,3], v);
@@ -509,12 +481,6 @@ fn main() {
 
     println!("Hello, world!");
 
-    test_build_tree("empty", init_empty_tree());
-    test_build_tree("onenode", init_onenode_tree());
-    test_build_tree("leftside", init_leftside_tree());
-    test_build_tree("rightside", init_rightside_tree());
-    test_build_tree("bothside", init_bothside_tree());
-    test_build_tree("balance", init_prebalance_tree());
     test_tree_max_value_path("empty", init_empty_tree());
     test_tree_max_value_path("onenode", init_onenode_tree());
     test_tree_max_value_path("leftside", init_leftside_tree());
@@ -522,121 +488,3 @@ fn main() {
     test_tree_max_value_path("bothside", init_bothside_tree());
     test_tree_max_value_path("balance", init_prebalance_tree());
 }
-
-// This paper summarizes the relation of the three different array through the analysis of getting three different array from the same tree using three different algorithm: preorder traversal, inorder traversal and postorder traversal. 
-
-// fn bst_search(node:&Rc<RefCell<TreeNode>>,key:u32) -> Option<String>{
-//     let mut result:Option<String> = None;
-//     //println!("search {} {}",key,node.borrow().key);
-//     if key == node.borrow().key {
-//         if node.borrow().vaild {
-//             return Some(node.borrow().value.clone());
-//         }else {
-//             return None;
-//         }
-//     }
-//     else if key < node.borrow().key{
-//         if let Some(ref n) = node.borrow().left {
-//             result = bst_search(n,key);
-//         }
-//     }
-//     else {
-//         if let Some(ref n) = node.borrow().right {
-//             result = bst_search(n,key);
-//         }
-//     }
-//     //println!("res {:?}",result);
-//     result
-// }
-
-// fn do_delete(node:&Rc<RefCell<TreeNode>>,key:u32){
-//     let mut node1 = node.borrow_mut();
-//     if key == node1.key {
-//         node1.vaild = false;
-//     }
-//     else if key < node1.key{
-//         if let Some(ref n) = node1.left {
-//             do_delete(n,key);
-//         }
-//     }
-//     else {
-//         if let Some(ref n) = node1.right {
-//             do_delete(n,key);
-//         }
-//     }
-// }
-
-
-// fn do_insert(node:&Rc<RefCell<TreeNode>>,key:u32,value:String) {
-//     let mut node1 = node.borrow_mut();
-//     //println!("doinsert {} {} {}",key,value,node1.key);
-//     if key < node1.key {
-//         match node1.left {
-//             None => {
-//                 node1.left = Some(TreeNode::new(key,value));
-//             },
-//             Some(ref n) => {
-//                 do_insert(n,key,value);
-//             }
-//         }
-//     }
-//     else if key > node1.key {
-//         match node1.right {
-//             None => {
-//                 node1.right = Some(TreeNode::new(key,value));
-//             },
-//             Some(ref n) => {
-//                 do_insert(n,key,value);
-//             }
-//         }
-//     }else{
-//         node1.vaild = true;
-//         node1.value = value;
-//     }
-// }
-
-// impl Bst {
-
-//     pub fn new() -> Bst {
-//         Bst {
-//             count:0,
-//             root:None
-//         }
-//     }
-
-//     pub fn insert(&mut self,key:u32,value:String){
-//         if let Some(_) = self.bst_get(key) {
-//             return;
-//         }
-//         match self.root {
-//             None => {
-//                 self.root = Some(TreeNode::new(key,value));
-//             },
-//             Some(ref n) => {
-//                 do_insert(&n,key,value);
-//             }
-//         }
-//         self.count = self.count+1;
-//     }
-
-//     pub fn bst_get(&self,key:u32) -> Option<String>{
-//         match self.root {
-//             None => None,
-//             Some(ref n) => bst_search(n,key)
-//         }
-//     }
-
-
-//     pub fn bst_delete(&self,key:u32){
-//         if let None = self.bst_get(key) {
-//             return;
-//         }
-//         match self.root {
-//             None => {},
-//             Some(ref n) => {
-//                 do_delete(n,key)
-//             }
-//         };
-//     }
-
-// }

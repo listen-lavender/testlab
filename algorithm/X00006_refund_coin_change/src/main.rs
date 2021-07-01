@@ -61,4 +61,10 @@ fn main() {
     println!("coin {}: {}", amount, plain_coin_change(&coins, amount));
     let amount = 3;
     println!("coin {}: {}", amount, plain_coin_change(&coins, amount));
+    let amount = 2;
+    println!("coin {}: {}", amount, plain_coin_change(&coins, amount));
+    let amount = 1;
+    println!("coin {}: {}", amount, plain_coin_change(&coins, amount));
+    let amount = 0;
+    println!("coin {}: {}", amount, plain_coin_change(&coins, amount));
 }
