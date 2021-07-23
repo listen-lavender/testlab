@@ -317,9 +317,9 @@ fn n_queen(arr: &mut [u32]) {
 
 fn test_n_queen(arr: &[u32]) -> bool {
     // let mut row_set: HashSet<u32> = HashSet::new();
-    let mut col_set: HashSet<u32> = HashSet::new();
-    let mut add_set: HashSet<u32> = HashSet::new();
-    let mut sub_set: HashSet<u32> = HashSet::new();
+    let mut col_set: HashSet<u32> = HashSet::with_capacity(arr.len());
+    let mut add_set: HashSet<u32> = HashSet::with_capacity(arr.len());
+    let mut sub_set: HashSet<i32> = HashSet::with_capacity(arr.len());
     let mut is_ok = true;
     for (i, j) in arr.iter().enumerate() {
         let row = i as u32;
@@ -334,15 +334,15 @@ fn test_n_queen(arr: &[u32]) -> bool {
         let add = row + col;
         if add_set.contains(&add) {
             is_ok = false;
-            // println!("add: {:?} {}", add_set, add);
+            println!("add: {:?} {}", add_set, add);
             break;
         } else {
             add_set.insert(add);
         }
-        let sub = abs_sub(row, col);
+        let sub = row as i32 - col as i32;
         if sub_set.contains(&sub) {
             is_ok = false;
-            // println!("sub: {:?} {}", sub_set, sub);
+            println!("sub: {:?} {}", sub_set, sub);
             break;
         } else {
             sub_set.insert(sub);
@@ -481,5 +481,5 @@ fn main() {
     // println!("{:#?} <<<>>>", &k[0..]);
     // let mut already_printed: HashSet<&[i32]> = HashSet::new();
     // combine_set(&k[0..], &mut already_printed);
-    n_queen(&mut [0, 0, 0, 0, 0, 0, 0]);
+    n_queen(&mut [0, 0, 0, 0, 0, 0]);
 }
