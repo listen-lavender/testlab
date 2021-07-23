@@ -263,46 +263,53 @@ fn place_row<'a>(arr: &'a mut [u32], row: u32) {
 
 fn place_row_col<'a>(arr: &'a mut [u32], row: u32, col: u32) {
     // println!("{:#?}, {}, {}", arr, row, col);
-    if col == (arr.len() as u32) {
-    } else if row == (arr.len() as u32) {
-        println!("solution: {:?}", arr);
+    if row == (arr.len() as u32) {
+        println!("solution: {:?} {}", arr, test_n_queen(arr));
         // for i in 0..arr.len() {
         //     arr[i] = 0;
         // }
+        // println!("444 {} {}<<<", row-1, arr[(row-1)as usize] + 1);
+        place_row_col(arr, row-1, arr[(row-1)as usize] + 1);
     } else if row == 0 {
-        arr[row as usize] = col;
         if col < arr.len() as u32 {
+            arr[row as usize] = col;
             place_row_col(arr, row+1, 0);
         }
+        // if col < arr.len() as u32 {
+        // }
         // for j in 0..arr.len() {
         //     place(arr, row+1, j as u32);
         // }
     } else {
         let mut can_place = true;
-        for i in 0..row as usize {
-            println!("{} <<<", i);
-            let prev_row = i as u32;
-            let prev_col = arr[i];
-            can_place = !abs_pair_equal(row, col, prev_row, prev_col);
-            println!("curr {}, {} = prev {}, {} :: {}", row, col, prev_row, prev_col, can_place);
-            if !can_place {
-                break
+        if col < (arr.len() as u32) {
+            for i in 0..row as usize {
+                // println!("{} <<<", i);
+                let prev_row = i as u32;
+                let prev_col = arr[i];
+                can_place = !abs_pair_equal(row, col, prev_row, prev_col);
+                // println!("curr {}, {} = prev {}, {} :: {}", row, col, prev_row, prev_col, can_place);
+                if !can_place {
+                    break
+                }
             }
+        } else {
+            can_place = false;
         }
         if can_place {
             arr[row as usize] = col;
-            println!("222 {} {}<<<", row+1, 0);
+            // println!("222 {} {}<<<", row+1, 0);
             place_row_col(arr, row+1, 0);
         } else {
             if col >= arr.len() as u32 {
                 if row > 0 {
-                    println!("000 {} {}<<<", row-1, arr[(row-1)as usize] + 1);
+                    // println!("000 {} {}<<<", row-1, arr[(row-1)as usize] + 1);
                     place_row_col(arr, row-1, arr[(row-1)as usize] + 1);
                 } else {
-                    println!("3333");
+                    // println!("3333");
                 }
             } else {
-                println!("111 {} {}<<<", row, col+1);
+                // println!("111 {} {}<<<", row, col+1);
                 place_row_col(arr, row, col+1);
             }
         }
@@ -311,8 +318,8 @@ fn place_row_col<'a>(arr: &'a mut [u32], row: u32, col: u32) {
 
 // fn combine_set<'a, 'b>(nums: &'a [i32], already_printed: &'b mut HashSet<&'a [i32]>) {
 fn n_queen(arr: &mut [u32]) {
-    place_row(arr, 0);
-    // place_row_col(arr, 0, 0);
+    // place_row(arr, 0);
+    place_row_col(arr, 0, 0);
 }
 
 fn test_n_queen(arr: &[u32]) -> bool {
