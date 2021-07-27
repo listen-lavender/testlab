@@ -10,6 +10,31 @@ struct Foo {
     y: Cell<u32>,
 }
 
+struct Stack<T> {
+    eles: Vec<T>,
+}
+
+impl<T> Stack<T> {
+    pub fn with_capacity(init_size: usize) -> Self {
+        Self {
+            eles:Vec::with_capacity(init_size),
+        }
+    }
+    pub fn pop(&mut self) -> Option<T> {
+        self.eles.pop()
+    }
+    pub fn push(&mut self, e: T) {
+        self.eles.push(e)
+    }
+    pub fn size(&mut self) -> usize {
+        self.eles.len()
+    }
+    pub fn top(&mut self) -> Option<&T> {
+        self.eles.last()
+    }
+}
+
+// #[derive(Clone)]
 struct TreeNode {
     value: u32,
     left: Option<Rc<RefCell<TreeNode>>>,
@@ -55,38 +80,175 @@ struct PathNode {
     is_exist: bool,
 }
 
-fn preorder_traverse<F>(node: &Option<Rc<RefCell<TreeNode>>>, receive:&mut F) where F: FnMut(u32) {
+fn fast_preorder_traverse(node: Option<Rc<RefCell<TreeNode>>>) {
+    let mut stack = Stack::<Rc<RefCell<TreeNode>>>::with_capacity(5);
+    let mut curr_node = node;
+    loop {
+        match curr_node {
+            Some(_) => {
+                while let Some(rc_curr_node) = curr_node.clone() {
+                    println!("{}", rc_curr_node.borrow().value);
+                    stack.push(rc_curr_node.clone());
+                    curr_node = rc_curr_node.borrow().left.clone();
+                }
+                if stack.size() > 0 {
+                    curr_node = stack.pop();
+                    match curr_node {
+                        Some(rc_curr_node) => {
+                            curr_node = rc_curr_node.borrow().right.clone();
+                        }
+                        None => {}
+                    }
+                }
+            }
+            None => {
+                if stack.size() > 0 {
+                    curr_node = stack.pop();
+                    match curr_node {
+                        Some(rc_curr_node) => {
+                            curr_node = rc_curr_node.borrow().right.clone();
+                        }
+                        None => {}
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+fn fast_inorder_traverse(node: Option<Rc<RefCell<TreeNode>>>) {
+    let mut stack = Stack::<Rc<RefCell<TreeNode>>>::with_capacity(5);
+    let mut curr_node = node;
+    loop {
+        match curr_node {
+            Some(_) => {
+                while let Some(rc_curr_node) = curr_node.clone() {
+                    stack.push(rc_curr_node.clone());
+                    curr_node = rc_curr_node.borrow().left.clone();
+                }
+                if stack.size() > 0 {
+                    curr_node = stack.pop();
+                    match curr_node {
+                        Some(rc_curr_node) => {
+                            println!("{}", rc_curr_node.borrow().value);
+                            curr_node = rc_curr_node.borrow().right.clone();
+                        }
+                        None => {}
+                    }
+                }
+            }
+            None => {
+                if stack.size() > 0 {
+                    curr_node = stack.pop();
+                    match curr_node {
+                        Some(rc_curr_node) => {
+                            println!("{}", rc_curr_node.borrow().value);
+                            curr_node = rc_curr_node.borrow().right.clone();
+                        }
+                        None => {}
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+fn fast_postorder_traverse(node: Option<Rc<RefCell<TreeNode>>>) {
+    let mut stack = Stack::<Rc<RefCell<TreeNode>>>::with_capacity(5);
+    let mut curr_node = node;
+    loop {
+        match curr_node {
+            Some(_) => {
+                while let Some(rc_curr_node) = curr_node.clone() {
+                    stack.push(rc_curr_node.clone());
+                    curr_node = rc_curr_node.borrow().left.clone();
+                }
+                if stack.size() > 0 {
+                    let top_node = stack.top();
+                    match top_node {
+                        Some(rc_top_node) => {
+                            let right_node = rc_top_node.borrow().right.clone();
+                            match right_node {
+                                Some(_) => {
+                                    rc_top_node.borrow_mut().right = None;
+                                    curr_node = right_node;
+                                }
+                                None => {
+                                    println!("{}", rc_top_node.borrow().value);
+                                    curr_node = right_node;
+                                    stack.pop();
+                                }
+                            }
+                        }
+                        None => {}
+                    }
+                }
+            }
+            None => {
+                if stack.size() > 0 {
+                    let top_node = stack.top();
+                    match top_node {
+                        Some(rc_top_node) => {
+                            let right_node = rc_top_node.borrow().right.clone();
+                            match right_node {
+                                Some(_) => {
+                                    rc_top_node.borrow_mut().right = None;
+                                    curr_node = right_node;
+                                }
+                                None => {
+                                    println!("{}", rc_top_node.borrow().value);
+                                    curr_node = right_node;
+                                    stack.pop();
+                                }
+                            }
+                        }
+                        None => {}
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+fn plain_preorder_traverse<F>(node: &Option<Rc<RefCell<TreeNode>>>, receive:&mut F) where F: FnMut(u32) {
     match node {
         Some(raw_node) => {
             let value = raw_node.borrow().value;
             println!("{}", value);
             receive(value);
-            preorder_traverse(&raw_node.borrow().left, receive);
-            preorder_traverse(&raw_node.borrow().right, receive);
+            plain_preorder_traverse(&raw_node.borrow().left, receive);
+            plain_preorder_traverse(&raw_node.borrow().right, receive);
         }
         None => {
         }
     }
 }
 
-fn inorder_traverse<F>(node: &Option<Rc<RefCell<TreeNode>>>, receive:&mut F) where F: FnMut(u32) {
+fn plain_inorder_traverse<F>(node: &Option<Rc<RefCell<TreeNode>>>, receive:&mut F) where F: FnMut(u32) {
     match node {
         Some(raw_node) => {
-            inorder_traverse(&raw_node.borrow().left, receive);
+            plain_inorder_traverse(&raw_node.borrow().left, receive);
             let value = raw_node.borrow().value;
+            // println!("{}", value);
             receive(value);
-            inorder_traverse(&raw_node.borrow().right, receive);
+            plain_inorder_traverse(&raw_node.borrow().right, receive);
         }
         None => {
         }
     }
 }
 
-fn postorder_traverse<F>(node: &Option<Rc<RefCell<TreeNode>>>, receive:&mut F) where F: FnMut(u32) {
+fn plain_postorder_traverse<F>(node: &Option<Rc<RefCell<TreeNode>>>, receive:&mut F) where F: FnMut(u32) {
     match node {
         Some(raw_node) => {
-            postorder_traverse(&raw_node.borrow().left, receive);
-            postorder_traverse(&raw_node.borrow().right, receive);
+            plain_postorder_traverse(&raw_node.borrow().left, receive);
+            plain_postorder_traverse(&raw_node.borrow().right, receive);
             let value = raw_node.borrow().value;
             println!("{}", value);
             receive(value);
@@ -364,13 +526,13 @@ fn store_tree(root: Option<Rc<RefCell<TreeNode>>>) -> TreeStore {
         inmap: HashMap::new(),
     };
     let mut prereceive = |x: u32| ts.preorder.push(x);
-    preorder_traverse(&root, &mut prereceive);
+    plain_preorder_traverse(&root, &mut prereceive);
     if ts.preorder.len() > 0 {
         ts.pre_end = ts.preorder.len()-1;
     }
 
     let mut inreceive = |x: u32| ts.inorder.push(x);
-    inorder_traverse(&root, &mut inreceive);
+    plain_inorder_traverse(&root, &mut inreceive);
     if ts.inorder.len() > 0 {
         ts.in_end = ts.inorder.len()-1;
     }
@@ -405,8 +567,23 @@ fn test_build_tree(mark: &str, tree: Option<Rc<RefCell<TreeNode>>>){
     // preorder: &Vec<u32>, pre_start: u32, pre_end: u32, inorder: &Vec<u32>, in_start: u32, in_end: u32, inmap: &HashMap<u32, u32>
     let tree = build_tree(&ts.preorder, ts.pre_start, ts.pre_end, &ts.inorder, ts.in_start, ts.in_end, &ts.inmap);
     println!("=====start rebuild {} tree", mark);
-    store_tree(tree);
+    store_tree(tree.clone());
     println!("=====end {} tree", mark);
+    let mut receive = |x: u32| {};
+    plain_preorder_traverse(&tree, &mut receive);
+    println!("----------");
+    fast_preorder_traverse(tree.clone());
+    println!("pre----------");
+    let mut receive = |x: u32| {println!("{}", x)};
+    plain_inorder_traverse(&tree, &mut receive);
+    println!("----------");
+    fast_inorder_traverse(tree.clone());
+    println!("in----------");
+    let mut receive = |x: u32| {};
+    plain_postorder_traverse(&tree, &mut receive);
+    println!("----------");
+    fast_postorder_traverse(tree.clone());
+    println!("post----------");
 }
 
 fn test_tree_max_value_path(mark: &str, tree: Option<Rc<RefCell<TreeNode>>>){
