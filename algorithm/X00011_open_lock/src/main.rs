@@ -68,7 +68,7 @@ fn min_rotate(node: Option<Rc<RefCell<CodeNode>>>, deadends:&mut HashSet<[u32;4]
             deadends.insert(rc_node.borrow().value);
             while queue.len() > 0 {
                 let size = queue.len();
-                println!("walk at size {}", size);
+                // println!("walk at size {}", size);
                 for _ in 0..size {
                     let path_node = queue.remove(0);
                     if path_node.borrow().value == target {
@@ -97,10 +97,86 @@ fn min_rotate(node: Option<Rc<RefCell<CodeNode>>>, deadends:&mut HashSet<[u32;4]
     }
 }
 
+fn min_meet_rotate(node: Option<Rc<RefCell<CodeNode>>>, deadends:&mut HashSet<[u32;4]>, target:[u32;4]) -> u32 {
+    let mut queue: Vec<Rc<RefCell<CodeNode>>> = Vec::new();
+    let mut reverse_queue: Vec<Rc<RefCell<CodeNode>>> = Vec::new();
+    let target_node = CodeNode::new(target);
+    let mut visited: HashSet<[u32;4]> = deadends.clone();
+    let mut reverse_visited: HashSet<[u32;4]> = deadends.clone();
+    match node {
+        Some(rc_node) => {
+            let mut mh:u32 = 1;
+            let mut reverse_mh:u32 = 1;
+            let mut end = false;
+            let mut reverse_end = false;
+            queue.push(rc_node.clone());
+            visited.insert(rc_node.borrow().value);
+            reverse_queue.push(target_node.clone());
+            reverse_visited.insert(target_node.borrow().value);
+
+            while reverse_queue.len() > 0 || queue.len() > 0 {
+                if reverse_queue.len() > queue.len() {
+                    let size = reverse_queue.len();
+                    // println!("reverse walk at size {}", size);
+                    for _ in 0..size {
+                        let path_node = reverse_queue.remove(0);
+                        if visited.contains(&path_node.borrow().value) && !deadends.contains(&path_node.borrow().value) {
+                            println!("meet at {:?}", path_node.borrow().value);
+                            reverse_end = true;
+                            break;
+                        }
+                        for adj in &path_node.borrow().trees(&mut reverse_visited){
+                            reverse_queue.push(adj.clone());
+                        }
+                    }
+                    if reverse_end {
+                        break
+                    }
+                    reverse_mh = reverse_mh + 1;
+                } else {
+                    let size = queue.len();
+                    // println!("walk at size {}", size);
+                    for _ in 0..size {
+                        let path_node = queue.remove(0);
+                        if reverse_visited.contains(&path_node.borrow().value) && !deadends.contains(&path_node.borrow().value) {
+                            println!("meet at {:?}", path_node.borrow().value);
+                            end = true;
+                            break;
+                        }
+                        for adj in &path_node.borrow().trees(&mut visited){
+                            queue.push(adj.clone());
+                        }
+                    }
+                    if end {
+                        break
+                    }
+                    mh = mh + 1;
+                }
+            }
+        
+            if end || reverse_end {
+                (mh - 1) + (reverse_mh - 1)
+            } else {
+                0
+            }
+        }
+        None => {
+            0
+        }
+    }
+}
+
 fn test_min_rotate(mark: &str, tree: Option<Rc<RefCell<CodeNode>>>, deadends:&mut HashSet<[u32;4]>, target:[u32;4]){
     println!("=====start {} forest", mark);
     let mh = min_rotate(tree, deadends, target);
     println!("min rotate {}", mh);
+    println!("=====end {} forest", mark);
+}
+
+fn test_min_meet_rotate(mark: &str, tree: Option<Rc<RefCell<CodeNode>>>, deadends:&mut HashSet<[u32;4]>, target:[u32;4]){
+    println!("=====start {} forest", mark);
+    let mh = min_meet_rotate(tree, deadends, target);
+    println!("min meet rotate {}", mh);
     println!("=====end {} forest", mark);
 }
 
@@ -112,13 +188,25 @@ fn main() {
     deadends.insert([1, 2, 1, 2]);
     deadends.insert([2, 0, 0, 2]);
     test_min_rotate("0202 with trouble", Some(CodeNode::new([0, 0, 0, 0])), &mut deadends, [0, 2, 0, 2]);
+    let mut deadends:HashSet<[u32;4]> = HashSet::new();
+    deadends.insert([0, 2, 0, 1]);
+    deadends.insert([0, 1, 0, 1]);
+    deadends.insert([0, 1, 0, 2]);
+    deadends.insert([1, 2, 1, 2]);
+    deadends.insert([2, 0, 0, 2]);
+    test_min_meet_rotate("0202 with trouble", Some(CodeNode::new([0, 0, 0, 0])), &mut deadends, [0, 2, 0, 2]);
 
     let mut deadends:HashSet<[u32;4]> = HashSet::new();
     test_min_rotate("0202 without trouble", Some(CodeNode::new([0, 0, 0, 0])), &mut deadends, [0, 2, 0, 2]);
+    let mut deadends:HashSet<[u32;4]> = HashSet::new();
+    test_min_meet_rotate("0202 without trouble", Some(CodeNode::new([0, 0, 0, 0])), &mut deadends, [0, 2, 0, 2]);
 
     let mut deadends:HashSet<[u32;4]> = HashSet::new();
     deadends.insert([8, 8, 8, 8]);
     test_min_rotate("0009 without trouble", Some(CodeNode::new([0, 0, 0, 0])), &mut deadends, [0, 0, 0, 9]);
+    let mut deadends:HashSet<[u32;4]> = HashSet::new();
+    deadends.insert([8, 8, 8, 8]);
+    test_min_meet_rotate("0009 without trouble", Some(CodeNode::new([0, 0, 0, 0])), &mut deadends, [0, 0, 0, 9]);
 
     let mut deadends:HashSet<[u32;4]> = HashSet::new();
     deadends.insert([8, 8, 8, 7]);
@@ -130,4 +218,14 @@ fn main() {
     deadends.insert([7, 8, 8, 8]);
     deadends.insert([9, 8, 8, 8]);
     test_min_rotate("8888 never been", Some(CodeNode::new([0, 0, 0, 0])), &mut deadends, [8, 8, 8, 8]);
+    let mut deadends:HashSet<[u32;4]> = HashSet::new();
+    deadends.insert([8, 8, 8, 7]);
+    deadends.insert([8, 8, 8, 9]);
+    deadends.insert([8, 8, 7, 8]);
+    deadends.insert([8, 8, 9, 8]);
+    deadends.insert([8, 7, 8, 8]);
+    deadends.insert([8, 9, 8, 8]);
+    deadends.insert([7, 8, 8, 8]);
+    deadends.insert([9, 8, 8, 8]);
+    test_min_meet_rotate("8888 never been", Some(CodeNode::new([0, 0, 0, 0])), &mut deadends, [8, 8, 8, 8]);
 }
