@@ -129,7 +129,7 @@ fn init_forest() -> Option<Rc<RefCell<ForestNode>>> {
 }
 
 fn test_min_height_forest(mark: &str, tree: Option<Rc<RefCell<ForestNode>>>){
-    println!("=====start max_path {} forest", mark);
+    println!("=====start {} forest", mark);
     let mh = min_height(tree);
     println!("min height {}", mh);
     println!("=====end {} forest", mark);
