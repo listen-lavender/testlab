@@ -70,25 +70,25 @@ fn left_bound(nums:&[u32], target:u32) -> i32 {
         //     ind = -1;
         // }
         // ind
-        let mut left:usize = 0;
-        let mut right = nums.len() - 1;
+        let mut left:i32 = 0;
+        let mut right = (nums.len() - 1) as i32;
         let mut ind:i32 = -1;
         loop {
             if left > right {
-                ind = left as i32;
+                ind = left;
                 break;
             }
             // thread::sleep_ms(1000);
-            let mid = left + (right - left)/2;
+            let mid = (left + (right - left)/2) as usize;
             if nums[mid] < target {
-                left = mid + 1;
+                left = mid as i32 + 1;
             } else if nums[mid] > target {
-                right = mid - 1;
+                right = mid as i32 - 1;
             } else {
-                right = mid - 1;
+                right = mid as i32 - 1;
             }
         }
-        if left >= nums.len() || nums[left] != target {
+        if (left as usize) >= nums.len() || nums[left as usize] != target {
             ind = -1;
         }
         ind
@@ -99,8 +99,8 @@ fn right_bound(nums:&[u32], target:u32) -> i32 {
     if nums.len() == 0 {
         -1
     } else {
-        let mut left:usize = 0;
-        let mut right = nums.len() - 1;
+        let mut left:i32 = 0;
+        let mut right = (nums.len() - 1) as i32;
         let mut ind:i32 = -1;
         loop {
             if left > right {
@@ -109,16 +109,16 @@ fn right_bound(nums:&[u32], target:u32) -> i32 {
                 break;
             }
             // thread::sleep_ms(1000);
-            let mid = left + (right - left)/2;
+            let mid = (left + (right - left)/2) as usize;
             if nums[mid] < target {
-                left = mid + 1;
+                left = mid as i32 + 1;
             } else if nums[mid] > target {
-                right = mid - 1;
+                right = mid as i32 - 1;
             } else {
-                left = mid + 1;
+                left = mid as i32 + 1;
             }
         }
-        if left >= nums.len() || nums[left] != target {
+        if left < 0 || nums[left as usize] != target {
             ind = -1;
         }
         ind
@@ -148,6 +148,13 @@ fn main() {
     let target = 5;
     println!("bound {:?} {}: left {} right {}", nums, target, left_bound(nums, target), right_bound(nums, target));
     let target = 7;
-    println!("===");
+    println!("bound {:?} {}: left {} right {}", nums, target, left_bound(nums, target), right_bound(nums, target));
+    let target = 11;
+    println!("bound {:?} {}: left {} right {}", nums, target, left_bound(nums, target), right_bound(nums, target));
+    let target = 1;
+    println!("bound {:?} {}: left {} right {}", nums, target, left_bound(nums, target), right_bound(nums, target));
+    let target = 12;
+    println!("bound {:?} {}: left {} right {}", nums, target, left_bound(nums, target), right_bound(nums, target));
+    let target = 0;
     println!("bound {:?} {}: left {} right {}", nums, target, left_bound(nums, target), right_bound(nums, target));
 }
