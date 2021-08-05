@@ -33,6 +33,7 @@ fn lowest_common_ancestor(node: &Option<Rc<RefCell<TreeNode>>>, p:&TreeNode, q: 
                 Some(raw_left_ancestor) => {
                     match right_ancestor {
                         Some(raw_right_ancestor) => {
+                            println!("left {}, right {}", raw_left_ancestor.borrow().value, raw_right_ancestor.borrow().value);
                             Some(raw_node.clone())
                         }
                         None => {
