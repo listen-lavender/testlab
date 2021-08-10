@@ -67,6 +67,9 @@ impl Tweet {
         //     None
         // }
     }
+    fn clone(&self) -> Tweet {
+        Tweet::new(self.id, self.ts, self.content.clone())
+    }
 }
 
 struct User {
@@ -92,6 +95,8 @@ impl User {
         self.followed.remove(&user_id);
     }
     fn post(&mut self, tweet_id:u32, ts:i64, content:String) {
+        let mut content = "：".to_string() + &content;
+        content = self.name.clone() + &content;
         let news = Tweet::new(tweet_id, ts, content);
         match &self.tweet {
             Some(tweet) => {
@@ -207,7 +212,7 @@ impl Twitter {
                     let tweet = tweet.unwrap();
                     let mut next_tweet = Some(tweet.clone());
                     while let Some(tweet) = next_tweet {
-                        pq.push(tweet.clone());
+                        pq.push(Rc::new(RefCell::new(tweet.borrow().clone())));
                         next_tweet = tweet.borrow().next();
                     }
                 }
@@ -423,7 +428,7 @@ fn test_twitter(mark: &str){
         println!("{}, {}", tweet.borrow().content, tweet.borrow().ts);
         next_tweet = tweet.borrow().next();
     }
-    println!("");    
+    println!("");
     
     println!("=====end {}", mark);
 }

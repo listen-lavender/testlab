@@ -21,25 +21,21 @@ impl TreeNode {
         }))
     }
 
-    fn left_node(&mut self) -> Option<Rc<RefCell<TreeNode>>> {
-        let left_node = self.left.take();
-        if left_node.is_some() {
-            let left_node = left_node.unwrap();
-            self.left = Some(left_node.clone());
-            Some(left_node)
-        } else {
-            None
+    fn left_node(&self) -> Option<Rc<RefCell<TreeNode>>> {
+        match &self.left {
+            Some(left_node) => {
+                Some(left_node.clone())
+            }
+            None => {None}
         }
     }
 
-    fn right_node(&mut self) -> Option<Rc<RefCell<TreeNode>>> {
-        let right_node = self.right.take();
-        if right_node.is_some() {
-            let right_node = right_node.unwrap();
-            self.right = Some(right_node.clone());
-            Some(right_node)
-        } else {
-            None
+    fn right_node(&self) -> Option<Rc<RefCell<TreeNode>>> {
+        match &self.right {
+            Some(right_node) => {
+                Some(right_node.clone())
+            }
+            None => {None}
         }
     }
 }

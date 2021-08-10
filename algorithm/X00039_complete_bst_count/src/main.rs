@@ -21,27 +21,45 @@ impl TreeNode {
         }))
     }
 
-    fn left_node(&mut self) -> Option<Rc<RefCell<TreeNode>>> {
-        let left_node = self.left.take();
-        if left_node.is_some() {
-            let left_node = left_node.unwrap();
-            self.left = Some(left_node.clone());
-            Some(left_node)
-        } else {
-            None
+    fn left_node(&self) -> Option<Rc<RefCell<TreeNode>>> {
+        match &self.left {
+            Some(left_node) => {
+                Some(left_node.clone())
+            }
+            None => {None}
         }
     }
 
-    fn right_node(&mut self) -> Option<Rc<RefCell<TreeNode>>> {
-        let right_node = self.right.take();
-        if right_node.is_some() {
-            let right_node = right_node.unwrap();
-            self.right = Some(right_node.clone());
-            Some(right_node)
-        } else {
-            None
+    fn right_node(&self) -> Option<Rc<RefCell<TreeNode>>> {
+        match &self.right {
+            Some(right_node) => {
+                Some(right_node.clone())
+            }
+            None => {None}
         }
     }
+
+    // fn left_node(&mut self) -> Option<Rc<RefCell<TreeNode>>> {
+    //     let left_node = self.left.take();
+    //     if left_node.is_some() {
+    //         let left_node = left_node.unwrap();
+    //         self.left = Some(left_node.clone());
+    //         Some(left_node)
+    //     } else {
+    //         None
+    //     }
+    // }
+
+    // fn right_node(&mut self) -> Option<Rc<RefCell<TreeNode>>> {
+    //     let right_node = self.right.take();
+    //     if right_node.is_some() {
+    //         let right_node = right_node.unwrap();
+    //         self.right = Some(right_node.clone());
+    //         Some(right_node)
+    //     } else {
+    //         None
+    //     }
+    // }
 }
 
 fn complete_bst_count(root: Option<Rc<RefCell<TreeNode>>>) -> u32 {
@@ -56,21 +74,21 @@ fn complete_bst_count(root: Option<Rc<RefCell<TreeNode>>>) -> u32 {
     let mut root = Some(rc_node.clone());
     while let Some(next_rc_node) = root {
         left_height = left_height + 1;
-        root = next_rc_node.borrow_mut().left_node();
+        root = next_rc_node.borrow().left_node();
     }
 
     let mut root = Some(rc_node.clone());
     while let Some(next_rc_node) = root {
         right_height = right_height + 1;
-        root = next_rc_node.borrow_mut().right_node();
+        root = next_rc_node.borrow().right_node();
     }
 
     if left_height == right_height {
         let base: u32 = 2;
         base.pow(left_height) - 1
     } else {
-        let left_node = rc_node.borrow_mut().left_node();
-        let right_node = rc_node.borrow_mut().right_node();
+        let left_node = rc_node.borrow().left_node();
+        let right_node = rc_node.borrow().right_node();
         complete_bst_count(left_node) + 1 + complete_bst_count(right_node)
     }
 }
