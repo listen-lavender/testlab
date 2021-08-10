@@ -11,6 +11,7 @@ use chrono::Utc;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::BinaryHeap;
+use std::thread;
 
 struct Tweet {
     id: u32,
@@ -21,13 +22,13 @@ struct Tweet {
 
 impl Ord for Tweet {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.ts.cmp(&other.ts)
+        self.ts.cmp(&other.ts).reverse()
     }
 }
 
 impl PartialOrd for Tweet {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+        Some(self.cmp(other).reverse())
     }
 }
 
@@ -268,37 +269,68 @@ fn test_twitter(mark: &str){
     twitter.follow(ayue, fuliye);
 
     twitter.postTweet(yangyan, "明天日月潭开大会".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(ayue, "我感冒了去不了".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(zhouxingxing, "开会要说什么".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(zhouxingxing, "阿月不去，我也不去".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(yangyan, "都要来".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(caikuo, "礼门今年业绩辉煌".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(yangyan, "礼门经费变多了".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(yangyan, "义门伤员也不少".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(zhangguan, "义门做了不少好事".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(zhangguan, "我们比礼门的人生活艰苦，危险更多".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(wumo, "仁门主持了4次放生".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(yangyan, "仁门啥都没干".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(caikuo, "仁门的影响是春风化雨".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(fanxiang, "智门左右天下大势".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(yangyan, "你们的供奉没加".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(caikuo, "讨厌智门".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(zhangguan, "讨厌智门".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(zengzihua, "天下没有难做的生意".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(caikuo, "曾小姑娘加油".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(zhangguan, "曾小姑娘加油".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(wumo, "曾小姑娘加油".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(yangyan, "子画最棒".to_string());
+    thread::sleep_ms(1000);
 
     twitter.postTweet(fuliye, "扬州一茬小姑娘长大了，我要去看看".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(zhouyu, "那里有很漂亮的衣服，我也想去".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(fuliye, "你还是守好城".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(judunhang, "狂躁，我很狂躁".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(fuliye, "心静自然凉".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(wangluo, "我就想静静".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(fuliye, "一起去溜达一下".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(xinli, "真好玩".to_string());
+    thread::sleep_ms(1000);
     twitter.postTweet(fuliye, "找你喝酒".to_string());
+    thread::sleep_ms(1000);
 
     println!("傅立业{}", mark);
     let mut next_tweet = twitter.get_news(fuliye);
