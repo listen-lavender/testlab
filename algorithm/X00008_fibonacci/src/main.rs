@@ -37,7 +37,7 @@ fn memory_fib(mem:&mut HashMap<u32, u32>, n: u32) -> u32 {
     }
 }
 
-fn dp_fib(n: u32) -> u32 {
+fn dpt_fib(n: u32) -> u32 {
     if n == 1 || n == 2 {
         1
     } else {
@@ -57,5 +57,5 @@ fn main() {
     let mut mem = HashMap::with_capacity(n as usize);
     println!("{}", post_order_tree_fib(n));
     println!("{}", memory_fib(&mut mem, n));
-    println!("{}", dp_fib(n));
+    println!("{}", dpt_fib(n));
 }
