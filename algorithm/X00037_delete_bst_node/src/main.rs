@@ -132,10 +132,12 @@ fn delete_bst_node(node: Option<Rc<RefCell<TreeNode>>>, value: u32) -> Option<Rc
     match node {
         Some(rc_node) => {
             if rc_node.borrow().value > value {
-                rc_node.borrow_mut().left = delete_bst_node(rc_node.borrow().left_node(), value);
+                let left_node = rc_node.borrow().left_node();
+                rc_node.borrow_mut().left = delete_bst_node(left_node, value);
                 Some(rc_node.clone())
             } else if rc_node.borrow().value < value {
-                rc_node.borrow_mut().right = delete_bst_node(rc_node.borrow().right_node(), value);
+                let right_node = rc_node.borrow().right_node();
+                rc_node.borrow_mut().right = delete_bst_node(right_node, value);
                 Some(rc_node.clone())
             } else {
                 let left_node = rc_node.borrow().left_node();
@@ -151,7 +153,8 @@ fn delete_bst_node(node: Option<Rc<RefCell<TreeNode>>>, value: u32) -> Option<Rc
                     let right_min_node = right_min_node.unwrap();
                     rc_node.borrow_mut().value = right_min_node.borrow().value;
                     right_min_node.borrow_mut().value = value;
-                    rc_node.borrow_mut().right = delete_bst_node(rc_node.borrow().right_node(), value);
+                    let right_node = rc_node.borrow().right_node();
+                    rc_node.borrow_mut().right = delete_bst_node(right_node, value);
                     Some(rc_node.clone())
                 }
             }
