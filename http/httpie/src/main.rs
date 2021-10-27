@@ -104,14 +104,14 @@ async fn post(client: Client, args: &Post) -> Result<()> {
     for pair in args.body.iter() {
         body.insert(&pair.k, &pair.v);
     }
-    let resp = client.post(&args.url).json(&body).send().await?;
-    Ok(print_resp(resp).await?)
+    let resp = client.post(&args.url).json(&body).send().await?; // await write
+    Ok(print_resp(resp).await?) // await read
 }
 
 // 打印服务器版本号 + 状态码
 fn print_status(resp: &Response) {
-    // let status = format!("{:?} {}", resp.version(), resp.status().blue());
-    let status = format!("{:?} {}", resp.version(), resp.status());
+    // let status = format!("{:?} {}", resp.version(), resp.status());
+    let status = format!("{:?} {}", resp.version(), resp.status()).blue();
     println!("{}\n", status);
 }
 
