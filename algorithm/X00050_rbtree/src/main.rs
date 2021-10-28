@@ -272,7 +272,7 @@ impl BinaryRBTreeNode {
         // }
     }
 
-    fn predecessor_node(&self) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
+    fn child_predecessor_node(&self) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
         let mut node = self.left_node();
         let mut predecessor_node:Option<Rc<RefCell<BinaryRBTreeNode>>> = None;
         while let Some(raw_node) = node {
@@ -282,7 +282,7 @@ impl BinaryRBTreeNode {
         predecessor_node
     }
 
-    fn successor_node(&self) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
+    fn child_successor_node(&self) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
         let mut node = self.right_node();
         let mut successor_node:Option<Rc<RefCell<BinaryRBTreeNode>>> = None;
         while let Some(raw_node) = node {
@@ -372,14 +372,14 @@ impl BinaryRBTreeNode {
         None
     }
 
-    fn DeleteByDiscolorRRRotate(raw_node:Rc<RefCell<BinaryRBTreeNode>>, raw_parent_node:Rc<RefCell<BinaryRBTreeNode>>, raw_brother_node:Rc<RefCell<BinaryRBTreeNode>>, root_node:Option<Rc<RefCell<BinaryRBTreeNode>>>) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
+    fn BalanceByDiscolorRRRotate(raw_parent_node:Rc<RefCell<BinaryRBTreeNode>>, raw_brother_node:Rc<RefCell<BinaryRBTreeNode>>, raw_nephew_node:Rc<RefCell<BinaryRBTreeNode>>,root_node:Option<Rc<RefCell<BinaryRBTreeNode>>>) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
         let mut root_node = root_node;
         let color = raw_parent_node.borrow().color;
         raw_parent_node.borrow_mut().color = raw_brother_node.borrow().color;
         raw_brother_node.borrow_mut().color = color;
 
-        raw_node.borrow_mut().parent = None;
-        raw_parent_node.borrow_mut().right = None; // 删除raw_node
+        // raw_node.borrow_mut().parent = None;
+        // raw_parent_node.borrow_mut().right = None; // 删除raw_node
         raw_parent_node.borrow_mut().left = raw_brother_node.borrow().right_node();
         raw_brother_node.borrow_mut().right = Some(raw_parent_node.clone());
 
@@ -398,17 +398,30 @@ impl BinaryRBTreeNode {
         }
         raw_parent_node.borrow_mut().parent = Some(raw_brother_node.clone());
         raw_brother_node.borrow_mut().parent = grandparent_node;
+        raw_nephew_node.borrow_mut().discolor();
         root_node
     }
 
-    fn DeleteByDiscolorLLRotate(raw_node:Rc<RefCell<BinaryRBTreeNode>>, raw_parent_node:Rc<RefCell<BinaryRBTreeNode>>, raw_brother_node:Rc<RefCell<BinaryRBTreeNode>>, root_node:Option<Rc<RefCell<BinaryRBTreeNode>>>) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
+    fn BalanceByDiscolorRLRotate(raw_parent_node:Rc<RefCell<BinaryRBTreeNode>>, raw_brother_node:Rc<RefCell<BinaryRBTreeNode>>, raw_nephew_node:Rc<RefCell<BinaryRBTreeNode>>,root_node:Option<Rc<RefCell<BinaryRBTreeNode>>>) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
+        let mut root_node = root_node;
+        BinaryRBTreeNode::SWAP(raw_nephew_node.clone(), raw_brother_node.clone());
+        let node = raw_brother_node.borrow().right_node();
+        raw_brother_node.borrow_mut().right = Some(raw_nephew_node.clone());
+        raw_brother_node.borrow_mut().left = raw_nephew_node.borrow().left_node();
+        raw_nephew_node.borrow_mut().left = raw_nephew_node.borrow().right_node();
+        raw_nephew_node.borrow_mut().right = node;
+        root_node = BinaryRBTreeNode::BalanceByDiscolorLLRotate(raw_parent_node, raw_brother_node, raw_nephew_node.clone(), root_node);
+        root_node
+    }
+
+    fn BalanceByDiscolorLLRotate(raw_parent_node:Rc<RefCell<BinaryRBTreeNode>>, raw_brother_node:Rc<RefCell<BinaryRBTreeNode>>,raw_nephew_node:Rc<RefCell<BinaryRBTreeNode>>,root_node:Option<Rc<RefCell<BinaryRBTreeNode>>>) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
         let mut root_node = root_node;
         let color = raw_parent_node.borrow().color;
         raw_parent_node.borrow_mut().color = raw_brother_node.borrow().color;
         raw_brother_node.borrow_mut().color = color;
 
-        raw_node.borrow_mut().parent = None;
-        raw_parent_node.borrow_mut().left = None; // 删除raw_node
+        // raw_node.borrow_mut().parent = None;
+        // raw_parent_node.borrow_mut().left = None; // 删除raw_node
         raw_parent_node.borrow_mut().right = raw_brother_node.borrow().left_node();
         raw_brother_node.borrow_mut().left = Some(raw_parent_node.clone());
 
@@ -427,6 +440,19 @@ impl BinaryRBTreeNode {
         }
         raw_parent_node.borrow_mut().parent = Some(raw_brother_node.clone());
         raw_brother_node.borrow_mut().parent = grandparent_node;
+        raw_nephew_node.borrow_mut().discolor();
+        root_node
+    }
+
+    fn BalanceByDiscolorLRRotate(raw_parent_node:Rc<RefCell<BinaryRBTreeNode>>, raw_brother_node:Rc<RefCell<BinaryRBTreeNode>>, raw_nephew_node:Rc<RefCell<BinaryRBTreeNode>>,root_node:Option<Rc<RefCell<BinaryRBTreeNode>>>) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
+        let mut root_node = root_node;
+        BinaryRBTreeNode::SWAP(raw_nephew_node.clone(), raw_brother_node.clone());
+        let node = raw_brother_node.borrow().left_node();
+        raw_brother_node.borrow_mut().left = Some(raw_nephew_node.clone());
+        raw_brother_node.borrow_mut().right = raw_nephew_node.borrow().right_node();
+        raw_nephew_node.borrow_mut().right = raw_nephew_node.borrow().left_node();
+        raw_nephew_node.borrow_mut().left = node;
+        root_node = BinaryRBTreeNode::BalanceByDiscolorRRRotate(raw_parent_node, raw_brother_node, raw_nephew_node.clone(), root_node);
         root_node
     }
 
@@ -544,94 +570,126 @@ impl BinaryRBTreeNode {
         raw_to_node.borrow_mut().val = val;
     }
 
+    fn ReBalance(parent_node:Option<Rc<RefCell<BinaryRBTreeNode>>>, brother_node:Option<Rc<RefCell<BinaryRBTreeNode>>>, root_node:Option<Rc<RefCell<BinaryRBTreeNode>>>) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
+        let mut root_node = root_node;
+        match parent_node {
+            Some(raw_parent_node) => {
+                if BinaryRBTreeNode::IS_BLACK(&brother_node) {
+                    match brother_node {
+                        Some(raw_brother_node) => {
+                            let left_nephew_node = raw_brother_node.borrow().left_node();
+                            let right_nephew_node = raw_brother_node.borrow().right_node();
+                            if BinaryRBTreeNode::IS_RED(&left_nephew_node) && raw_brother_node.borrow().is_left_child_of_parent() {
+                               match &left_nephew_node {
+                                   Some(raw_nephew_node)=>{
+                                        // raw_node.borrow_mut().parent = None;
+                                        // raw_parent_node.borrow_mut().right = None; // 删除raw_node
+                                        root_node = BinaryRBTreeNode::BalanceByDiscolorRRRotate(raw_parent_node, raw_brother_node, raw_nephew_node.clone(), root_node);
+                                   }
+                                   None => {}
+                               }
+                            } else if BinaryRBTreeNode::IS_RED(&right_nephew_node) && raw_brother_node.borrow().is_right_child_of_parent() {
+                                match &right_nephew_node {
+                                    Some(raw_nephew_node)=>{
+                                        // raw_node.borrow_mut().parent = None;
+                                        // raw_parent_node.borrow_mut().left = None; // 删除raw_node
+                                        root_node = BinaryRBTreeNode::BalanceByDiscolorLLRotate(raw_parent_node, raw_brother_node, raw_nephew_node.clone(), root_node);
+                                    }
+                                    None => {}
+                                }
+                            } else if BinaryRBTreeNode::IS_RED(&left_nephew_node) && raw_brother_node.borrow().is_right_child_of_parent() {
+                                match &left_nephew_node {
+                                    Some(raw_nephew_node)=>{
+                                        // raw_node.borrow_mut().parent = None;
+                                        // raw_parent_node.borrow_mut().left = None; // 删除raw_node
+                                        root_node = BinaryRBTreeNode::BalanceByDiscolorRLRotate(raw_parent_node, raw_brother_node, raw_nephew_node.clone(), root_node);
+                                    }
+                                    None => {}
+                                }
+                            } else if BinaryRBTreeNode::IS_RED(&right_nephew_node) && raw_brother_node.borrow().is_left_child_of_parent() {
+                                match &right_nephew_node {
+                                    Some(raw_nephew_node)=>{
+                                        // raw_node.borrow_mut().parent = None;
+                                        // raw_parent_node.borrow_mut().right = None; // 删除raw_node
+                                        root_node = BinaryRBTreeNode::BalanceByDiscolorLRRotate(raw_parent_node, raw_brother_node, raw_nephew_node.clone(), root_node);
+                                    }
+                                    None => {}
+                                }
+                            } else {
+                                if BinaryRBTreeNode::IS_RED(&Some(raw_parent_node.clone())) {
+                                    raw_brother_node.borrow_mut().discolor();
+                                    raw_parent_node.borrow_mut().discolor();
+                                } else {
+                                    let parent_node = raw_parent_node.borrow().parent_node();
+                                    let brother_node = raw_parent_node.borrow().brother_node();
+                                    root_node = BinaryRBTreeNode::ReBalance(parent_node, brother_node, root_node);
+                                }
+                            }
+                        }
+                        None => {}
+                    }
+                } else {
+                    match brother_node {
+                        Some(raw_brother_node) => {
+                            if raw_brother_node.borrow().is_right_child_of_parent() {
+                                let nephew_node = raw_brother_node.borrow().left_node();
+                                raw_parent_node.borrow_mut().right = raw_brother_node.borrow().left_node();
+                                raw_brother_node.borrow_mut().left = Some(raw_parent_node.clone());
+                                raw_brother_node.borrow_mut().parent = raw_parent_node.borrow().parent_node();
+                                raw_parent_node.borrow_mut().parent = Some(raw_brother_node.clone());
+                                root_node = BinaryRBTreeNode::ReBalance(Some(raw_brother_node.clone()), nephew_node, root_node);
+                            } else {
+                                let nephew_node = raw_brother_node.borrow().right_node();
+                                raw_parent_node.borrow_mut().left = raw_brother_node.borrow().right_node();
+                                raw_brother_node.borrow_mut().right = Some(raw_parent_node.clone());
+                                raw_brother_node.borrow_mut().parent = raw_parent_node.borrow().parent_node();
+                                raw_parent_node.borrow_mut().parent = Some(raw_brother_node.clone());
+                                root_node = BinaryRBTreeNode::ReBalance(Some(raw_brother_node.clone()), nephew_node, root_node);
+                            }
+                        }
+                        None => {} // impossible
+                    }
+                }
+            }
+            None => {}
+        }
+        root_node
+    }
+
     fn DELETE_NOCHILD_NODE(raw_node:Rc<RefCell<BinaryRBTreeNode>>, root_node:Option<Rc<RefCell<BinaryRBTreeNode>>>) -> Option<Rc<RefCell<BinaryRBTreeNode>>> {
         if BinaryRBTreeNode::IS_ROOT(&Some(raw_node.clone())) {
             return None
         }
         let mut root_node = root_node;
         let parent_node = raw_node.borrow().parent_node();
+        let brother_node = raw_node.borrow().brother_node();
+        
+        match &parent_node {
+            Some(raw_parent_node) => {
+                if raw_node.borrow_mut().is_left_child_of_parent() {
+                    raw_parent_node.borrow_mut().left = None;
+                } else {
+                    raw_parent_node.borrow_mut().right = None;
+                }
+                raw_node.borrow_mut().parent = None;
+            }
+            None => {}
+        }
 
         if BinaryRBTreeNode::IS_RED(&Some(raw_node.clone())) { // 1
-            match parent_node {
-                Some(raw_parent_node) => {
-                    if raw_node.borrow_mut().is_left_child_of_parent() {
-                        raw_parent_node.borrow_mut().left = None;
-                    } else {
-                        raw_parent_node.borrow_mut().right = None;
-                    }
-                    raw_node.borrow_mut().parent = None;
-                }
-                None => {}
-            }
+            // match parent_node {
+            //     Some(raw_parent_node) => {
+            //         if raw_node.borrow_mut().is_left_child_of_parent() {
+            //             raw_parent_node.borrow_mut().left = None;
+            //         } else {
+            //             raw_parent_node.borrow_mut().right = None;
+            //         }
+            //         raw_node.borrow_mut().parent = None;
+            //     }
+            //     None => {}
+            // }
         } else { // 2
-            let brother_node = raw_node.borrow().brother_node();
-            match parent_node {
-                Some(raw_parent_node) => {
-                    if BinaryRBTreeNode::IS_BLACK(&brother_node) {
-                        match brother_node {
-                            Some(raw_brother_node) => {
-                                let left_nephew_node = raw_brother_node.borrow().left_node();
-                                let right_nephew_node = raw_brother_node.borrow().right_node();
-                                if BinaryRBTreeNode::IS_RED(&left_nephew_node) && raw_brother_node.borrow().is_left_child_of_parent() {
-                                   match &left_nephew_node {
-                                       Some(raw_nephew_node)=>{
-                                            root_node = BinaryRBTreeNode::DeleteByDiscolorRRRotate(raw_node, raw_parent_node, raw_brother_node, root_node);
-                                           raw_nephew_node.borrow_mut().discolor()
-                                       }
-                                       None => {}
-                                   }
-                                } else if BinaryRBTreeNode::IS_RED(&right_nephew_node) && raw_brother_node.borrow().is_right_child_of_parent() {
-                                    match &right_nephew_node {
-                                        Some(raw_nephew_node)=>{
-                                            root_node = BinaryRBTreeNode::DeleteByDiscolorLLRotate(raw_node, raw_parent_node, raw_brother_node, root_node);
-                                            raw_nephew_node.borrow_mut().discolor()
-                                        }
-                                        None => {}
-                                    }
-                                } else if BinaryRBTreeNode::IS_RED(&left_nephew_node) && raw_brother_node.borrow().is_right_child_of_parent() {
-                                    match &left_nephew_node {
-                                        Some(raw_nephew_node)=>{
-                                            BinaryRBTreeNode::SWAP(raw_nephew_node.clone(), raw_brother_node.clone());
-                                            let node = raw_brother_node.borrow().right_node();
-                                            raw_brother_node.borrow_mut().right = Some(raw_nephew_node.clone());
-                                            raw_brother_node.borrow_mut().left = raw_nephew_node.borrow().left_node();
-                                            raw_nephew_node.borrow_mut().left = raw_nephew_node.borrow().right_node();
-                                            raw_nephew_node.borrow_mut().right = node;
-                                            root_node = BinaryRBTreeNode::DeleteByDiscolorLLRotate(raw_node, raw_parent_node, raw_brother_node, root_node);
-                                            raw_nephew_node.borrow_mut().discolor()
-                                        }
-                                        None => {}
-                                    }
-                                } else if BinaryRBTreeNode::IS_RED(&right_nephew_node) && raw_brother_node.borrow().is_left_child_of_parent() {
-                                    match &right_nephew_node {
-                                        Some(raw_nephew_node)=>{
-                                            BinaryRBTreeNode::SWAP(raw_nephew_node.clone(), raw_brother_node.clone());
-                                            let node = raw_brother_node.borrow().left_node();
-                                            raw_brother_node.borrow_mut().left = Some(raw_nephew_node.clone());
-                                            raw_brother_node.borrow_mut().right = raw_nephew_node.borrow().right_node();
-                                            raw_nephew_node.borrow_mut().right = raw_nephew_node.borrow().left_node();
-                                            raw_nephew_node.borrow_mut().left = node;
-                                            root_node = BinaryRBTreeNode::DeleteByDiscolorRRRotate(raw_node, raw_parent_node, raw_brother_node, root_node);
-                                            raw_nephew_node.borrow_mut().discolor()
-                                        }
-                                        None => {}
-                                    }
-                                } else {
-                                    // if raw_node.borrow().is_left_child_of_parent() {
-                                    //     raw_parent_node.borrow_mut().left = None; // 删除raw_node
-                                    // } else {
-                                    //     raw_parent_node.borrow_mut().right = None; // 删除raw_node
-                                    // }
-                                    // raw_node.borrow_mut().parent = None;
-                                }
-                            }
-                            None => {}
-                        }
-                    } else {
-                    }
-                }
-                None => {}
-            }
+            root_node = BinaryRBTreeNode::ReBalance(parent_node, brother_node, root_node);
         }
         root_node
     }
@@ -695,7 +753,7 @@ impl BinaryRBTreeNode {
                 } else if raw_node.borrow().is_left_none() || raw_node.borrow().is_right_none() { // 3, 4
                     root_node = BinaryRBTreeNode::DELETE_ONECHILD_NODE(raw_node.clone(), root_node);
                 } else { // 5, 6
-                    let successor_node = raw_node.borrow().successor_node();
+                    let successor_node = raw_node.borrow().child_successor_node();
                     match successor_node {
                         Some(raw_successor_node) => {
                             BinaryRBTreeNode::SWAP(raw_node.clone(), raw_successor_node.clone());

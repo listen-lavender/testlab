@@ -1,2 +1,6 @@
 algorithm/*/target/*
 algorithm/*/Cargo.lock
+*clap-3.0.0-beta.4*
+*DS_Store*
+http/*/target
+http/*/Cargo.lock
