@@ -362,7 +362,7 @@ impl MultiBTree {
             Some(raw_node) => {
                 let child_or_keyval = raw_node.borrow().get_child_or_keyval(k);
                 match child_or_keyval.kvn {
-                    KeyvalOrNode::Keyval(kv) => {
+                    KeyvalOrNode::Keyval(_) => {
                         raw_node.borrow_mut().set_kv(child_or_keyval.index as usize, v.clone());
                     }
                     KeyvalOrNode::Node(around_node) => {
@@ -375,13 +375,14 @@ impl MultiBTree {
                                         raw_node.borrow_mut().set_parent(Some(raw_parent_node.clone()));
                                         self.root = Some(raw_parent_node.clone());
                                         parent_node = Some(raw_parent_node.clone());
+                                        self.height = self.height + 1;
                                     }
                                     let split_index = self.split(Some(raw_node.clone()));
                                     match parent_node {
                                         Some(raw_parent_node) => {
                                             if raw_parent_node.borrow().kvs[split_index].key == k {
                                                 raw_parent_node.borrow_mut().set_kv(split_index, v.clone());
-                                            } else if k < raw_parent_node.borrow().kvs[split_index].key {;
+                                            } else if k < raw_parent_node.borrow().kvs[split_index].key {
                                                 next_node = raw_parent_node.borrow().get_child(split_index);
                                             } else {
                                                 next_node = raw_parent_node.borrow().get_child(split_index+1);
@@ -459,34 +460,34 @@ impl MultiBTree {
         right_node
     }
     fn delete(&mut self, k:u32) {
-        let mut k = k;
+        let mut key = k;
         match &self.root {
             Some(raw_root_node) => {
                 let mut node = Some(raw_root_node.clone());
                 while let Some(raw_node) = node {
-                    let mut child_or_keyval = raw_node.borrow().get_child_or_keyval(k);
+                    let mut child_or_keyval = raw_node.borrow().get_child_or_keyval(key);
                     match child_or_keyval.kvn {
-                        KeyvalOrNode::Keyval(kv) => {
+                        KeyvalOrNode::Keyval(_) => {
                             let pre_child = raw_node.borrow().get_child(child_or_keyval.index as usize);
                             let post_child = raw_node.borrow().get_child(child_or_keyval.index as usize + 1);
                             match pre_child {
                                 Some(raw_pre_child) => {
                                     if raw_pre_child.borrow().is_not_empty() {
                                         let last_pre_kv = raw_pre_child.borrow().get_last_kv();
-                                        k = last_pre_kv.key;
-                                        raw_pre_child.borrow_mut().kvs[child_or_keyval.index as usize] = last_pre_kv;
+                                        key = last_pre_kv.key;
+                                        raw_node.borrow_mut().kvs[child_or_keyval.index as usize] = last_pre_kv;
                                         node = Some(raw_pre_child.clone());
                                     } else {
                                         match post_child {
                                             Some(raw_post_child) => {
                                                 if raw_post_child.borrow().is_not_empty() {
                                                     let first_post_kv = raw_post_child.borrow().get_first_kv();
-                                                    k = first_post_kv.key;
-                                                    raw_post_child.borrow_mut().kvs[child_or_keyval.index as usize] = first_post_kv;
+                                                    key = first_post_kv.key;
+                                                    raw_node.borrow_mut().kvs[child_or_keyval.index as usize] = first_post_kv;
                                                     node = Some(raw_post_child.clone());
                                                 } else {
                                                     let merge_node = self.merge(Some(raw_pre_child.clone()), Some(raw_post_child.clone()), raw_node.borrow().get_kv(child_or_keyval.index as usize));
-                                                    raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                                    raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, key);
                                                     if !raw_node.borrow().is_not_empty() {
                                                         match &merge_node {
                                                             Some(raw_merge_node) => {
@@ -502,7 +503,7 @@ impl MultiBTree {
                                             }
                                             None => {
                                                 let merge_node = self.merge(Some(raw_pre_child.clone()), None, raw_node.borrow().get_kv(child_or_keyval.index as usize));
-                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, key);
                                                 if !raw_node.borrow().is_not_empty() {
                                                     match &merge_node {
                                                         Some(raw_merge_node) => {
@@ -523,12 +524,12 @@ impl MultiBTree {
                                         Some(raw_post_child) => {
                                             if raw_post_child.borrow().is_not_empty() {
                                                 let first_post_kv = raw_post_child.borrow().get_first_kv();
-                                                k = first_post_kv.key;
+                                                key = first_post_kv.key;
                                                 raw_post_child.borrow_mut().kvs[child_or_keyval.index as usize] = first_post_kv;
                                                 node = Some(raw_post_child.clone());
                                             } else {
                                                 let merge_node = self.merge(None, Some(raw_post_child.clone()), raw_node.borrow().get_kv(child_or_keyval.index as usize));
-                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, key);
                                                 if !raw_node.borrow().is_not_empty() {
                                                     match &merge_node {
                                                         Some(raw_merge_node) => {
@@ -544,7 +545,7 @@ impl MultiBTree {
                                         }
                                         None => {
                                             let merge_node = self.merge(None, None, raw_node.borrow().get_kv(child_or_keyval.index as usize));
-                                            raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                            raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, key);
                                             if !raw_node.borrow().is_not_empty() {
                                                 match &merge_node {
                                                     Some(raw_merge_node) => {
@@ -625,7 +626,7 @@ impl MultiBTree {
                                                                 node = Some(raw_left_neighbor.clone());
                                                             } else {
                                                                 let merge_node = self.merge(Some(raw_left_neighbor.clone()), Some(raw_right_neighbor.clone()), raw_node.borrow().get_kv(child_or_keyval.index as usize));
-                                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, key);
                                                                 if !raw_node.borrow().is_not_empty() {
                                                                     match &merge_node {
                                                                         Some(raw_merge_node) => {
