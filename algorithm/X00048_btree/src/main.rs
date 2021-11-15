@@ -12,6 +12,7 @@ struct Keyval {
     key: u32,
 }
 
+#[derive(Clone)]
 struct MultiBTreeNode {
     parent: Option<Rc<RefCell<MultiBTreeNode>>>,
     children: Vec<Option<Rc<RefCell<MultiBTreeNode>>>>,
@@ -98,6 +99,32 @@ impl MultiBTreeNode {
             val:self.kvs[index].val.clone(),
         }
     }
+    fn get_last_kv(&self) -> Keyval {
+        if self.kvs.len() > 0 {
+            Keyval{
+                key:self.kvs[self.kvs.len()-1].key,
+                val:self.kvs[self.kvs.len()-1].val.clone(),
+            }
+        } else {
+            Keyval{
+                key:0,
+                val:"".to_string(),
+            }
+        }
+    }
+    fn get_first_kv(&self) -> Keyval {
+        if self.kvs.len() > 0 {
+            Keyval{
+                key:self.kvs[0].key,
+                val:self.kvs[0].val.clone(),
+            }
+        } else {
+            Keyval{
+                key:0,
+                val:"".to_string(),
+            }
+        }
+    }
     fn set_kv(&mut self, index:usize, val: String) {
         self.kvs[index].val = val;
     }
@@ -105,11 +132,39 @@ impl MultiBTreeNode {
         index < self.kvs.len()
     }
     fn get_child(&self, index:usize) -> Option<Rc<RefCell<MultiBTreeNode>>> {
-        match &self.children[index] {
-            Some(child_node) => {
-                Some(child_node.clone())
+        if index < self.children.len() {
+            match &self.children[index] {
+                Some(child_node) => {
+                    Some(child_node.clone())
+                }
+                None => {None}
             }
-            None => {None}
+        } else {
+            None
+        }
+    }
+    fn get_first_child(&self) -> Option<Rc<RefCell<MultiBTreeNode>>> {
+        if self.children.len() > 0 {
+            match &self.children[0] {
+                Some(child_node) => {
+                    Some(child_node.clone())
+                }
+                None => {None}
+            }
+        } else {
+            None
+        }
+    }
+    fn get_last_child(&self) -> Option<Rc<RefCell<MultiBTreeNode>>> {
+        if self.children.len() > 0 {
+            match &self.children[self.children.len() - 1] {
+                Some(child_node) => {
+                    Some(child_node.clone())
+                }
+                None => {None}
+            }
+        } else {
+            None
         }
     }
     fn is_child_index_ok(&self, index:usize) -> bool {
@@ -198,8 +253,8 @@ impl MultiBTreeNode {
         //     }
         // }
     }
-    fn remove_keyval(&mut self, k: u32) {
-        let match_index = self.search_key_index(k);
+    fn remove_keyval(&mut self, match_index:usize, k: u32) {
+        // let match_index = self.search_key_index(k);
         if k == self.kvs[match_index].key {
             self.kvs.remove(match_index);
             self.children.remove(match_index);
@@ -224,23 +279,23 @@ impl MultiBTree {
     fn mid_index(&self) -> usize {
         (self.m - 1) / 2 + 1
     }
-    fn around(&self, node:MultiBTreeNode) -> MultiBTreeAroundNode {
+    fn around(&self, node:Rc<RefCell<MultiBTreeNode>>) -> MultiBTreeAroundNode {
         let mut aroundNode = MultiBTreeAroundNode{
             left_neighbor:None,
             left_index:-1,
             right_neighbor:None,
             right_index:-1,
         };
-        let parent_node = node.parent_node();
+        let parent_node = node.borrow().parent_node();
         match parent_node {
             Some(raw_parent_node) => {
-                let index = raw_parent_node.borrow().search_key_index(node.kvs[0].key);
+                let index = raw_parent_node.borrow().search_key_index(node.borrow().kvs[0].key);
                 let index_kv = raw_parent_node.borrow().get_kv(index);
 
                 let mut left_index = index as isize;
                 let mut right_index = index as isize + 2;
 
-                if node.kvs[0].key < index_kv.key {
+                if node.borrow().kvs[0].key < index_kv.key {
                     left_index = index as isize - 1;
                     right_index = index as isize + 1;
                 }
@@ -373,9 +428,242 @@ impl MultiBTree {
             node = self.implement_keyval(Some(raw_node.clone()), k, v.clone());
         }
     }
+    fn merge(&mut self, left_node:Option<Rc<RefCell<MultiBTreeNode>>>, right_node:Option<Rc<RefCell<MultiBTreeNode>>>, mid_kv:Keyval) -> Option<Rc<RefCell<MultiBTreeNode>>> {
+        match &left_node {
+            Some(raw_left_node) => {
+                raw_left_node.borrow_mut().add_keyval(mid_kv);
+                match &right_node {
+                    Some(raw_right_node) => {
+                        // let mut kvs = raw_left_node.borrow_mut().kvs;
+                        // raw_right_node.borrow_mut().kvs.extend(&mut kvs);
+                        for kv in raw_left_node.borrow().kvs.iter() {
+                            raw_right_node.borrow_mut().kvs.push(kv.clone());
+                        }
+                        for child_node in raw_left_node.borrow().children.iter() {
+                            match child_node {
+                                Some(raw_child_node) => {
+                                    raw_child_node.borrow_mut().set_parent(Some(raw_right_node.clone()));
+                                    raw_right_node.borrow_mut().children.push(Some(raw_child_node.clone()));
+                                }
+                                None => {
+                                    raw_right_node.borrow_mut().children.push(None);
+                                }
+                            }
+                        }
+                    }
+                    None => {}
+                }
+            }
+            None => {}
+        }
+        right_node
+    }
+    fn delete(&mut self, k:u32) {
+        let mut k = k;
+        match &self.root {
+            Some(raw_root_node) => {
+                let mut node = Some(raw_root_node.clone());
+                while let Some(raw_node) = node {
+                    let mut child_or_keyval = raw_node.borrow().get_child_or_keyval(k);
+                    match child_or_keyval.kvn {
+                        KeyvalOrNode::Keyval(kv) => {
+                            let pre_child = raw_node.borrow().get_child(child_or_keyval.index as usize);
+                            let post_child = raw_node.borrow().get_child(child_or_keyval.index as usize + 1);
+                            match pre_child {
+                                Some(raw_pre_child) => {
+                                    if raw_pre_child.borrow().is_not_empty() {
+                                        let last_pre_kv = raw_pre_child.borrow().get_last_kv();
+                                        k = last_pre_kv.key;
+                                        raw_pre_child.borrow_mut().kvs[child_or_keyval.index as usize] = last_pre_kv;
+                                        node = Some(raw_pre_child.clone());
+                                    } else {
+                                        match post_child {
+                                            Some(raw_post_child) => {
+                                                if raw_post_child.borrow().is_not_empty() {
+                                                    let first_post_kv = raw_post_child.borrow().get_first_kv();
+                                                    k = first_post_kv.key;
+                                                    raw_post_child.borrow_mut().kvs[child_or_keyval.index as usize] = first_post_kv;
+                                                    node = Some(raw_post_child.clone());
+                                                } else {
+                                                    let merge_node = self.merge(Some(raw_pre_child.clone()), Some(raw_post_child.clone()), raw_node.borrow().get_kv(child_or_keyval.index as usize));
+                                                    raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                                    if !raw_node.borrow().is_not_empty() {
+                                                        match &merge_node {
+                                                            Some(raw_merge_node) => {
+                                                                raw_merge_node.borrow_mut().set_parent(None);
+                                                                self.root = Some(raw_merge_node.clone());
+                                                                self.height = self.height - 1;
+                                                            }
+                                                            None => {}
+                                                        }
+                                                    }
+                                                    node = merge_node;
+                                                }
+                                            }
+                                            None => {
+                                                let merge_node = self.merge(Some(raw_pre_child.clone()), None, raw_node.borrow().get_kv(child_or_keyval.index as usize));
+                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                                if !raw_node.borrow().is_not_empty() {
+                                                    match &merge_node {
+                                                        Some(raw_merge_node) => {
+                                                            raw_merge_node.borrow_mut().set_parent(None);
+                                                            self.root = Some(raw_merge_node.clone());
+                                                            self.height = self.height - 1;
+                                                        }
+                                                        None => {}
+                                                    }
+                                                }
+                                                node = merge_node;
+                                            }
+                                        }
+                                    }
+                                }
+                                None => {
+                                    match post_child {
+                                        Some(raw_post_child) => {
+                                            if raw_post_child.borrow().is_not_empty() {
+                                                let first_post_kv = raw_post_child.borrow().get_first_kv();
+                                                k = first_post_kv.key;
+                                                raw_post_child.borrow_mut().kvs[child_or_keyval.index as usize] = first_post_kv;
+                                                node = Some(raw_post_child.clone());
+                                            } else {
+                                                let merge_node = self.merge(None, Some(raw_post_child.clone()), raw_node.borrow().get_kv(child_or_keyval.index as usize));
+                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                                if !raw_node.borrow().is_not_empty() {
+                                                    match &merge_node {
+                                                        Some(raw_merge_node) => {
+                                                            raw_merge_node.borrow_mut().set_parent(None);
+                                                            self.root = Some(raw_merge_node.clone());
+                                                            self.height = self.height - 1;
+                                                        }
+                                                        None => {}
+                                                    }
+                                                }
+                                                node = merge_node;
+                                            }
+                                        }
+                                        None => {
+                                            let merge_node = self.merge(None, None, raw_node.borrow().get_kv(child_or_keyval.index as usize));
+                                            raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                            if !raw_node.borrow().is_not_empty() {
+                                                match &merge_node {
+                                                    Some(raw_merge_node) => {
+                                                        raw_merge_node.borrow_mut().set_parent(None);
+                                                        self.root = Some(raw_merge_node.clone());
+                                                        self.height = self.height - 1;
+                                                    }
+                                                    None => {}
+                                                }
+                                            }
+                                            node = merge_node;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        KeyvalOrNode::Node(maybe_node) => {
+                            match maybe_node {
+                                Some(raw_maybe_node) => {
+                                    if raw_maybe_node.borrow().is_not_empty() {
+                                        node = Some(raw_maybe_node.clone());
+                                    } else {
+                                        let around_node = self.around(raw_maybe_node.clone());
+                                        let mut left_neighbor = around_node.left_neighbor;
+                                        let left_index = around_node.left_index;
+                                        let mut right_neighbor = around_node.right_neighbor;
+                                        let right_index = around_node.right_index;
+                                        if left_neighbor.is_none() {
+                                            left_neighbor = Some(raw_node.clone());
+                                            child_or_keyval.index = right_index;
+                                        } else {
+                                            right_neighbor = Some(raw_node.clone());
+                                            child_or_keyval.index = left_index;
+                                        }
+                                        match left_neighbor {
+                                            Some(raw_left_neighbor) => {
+                                                if raw_left_neighbor.borrow().is_not_empty() {
+                                                    match right_neighbor {
+                                                        Some(raw_right_neighbor) => {
+                                                            raw_right_neighbor.borrow_mut().kvs.insert(0, raw_node.borrow().get_kv(child_or_keyval.index as usize));
+                                                            let left_neighbor_last_node = raw_left_neighbor.borrow_mut().get_last_child();
+                                                            if !raw_left_neighbor.borrow().is_leaf {
+                                                                match &left_neighbor_last_node {
+                                                                    Some(raw_left_neighbor_last_node) => {
+                                                                        raw_left_neighbor_last_node.borrow_mut().set_parent(Some(raw_right_neighbor.clone()));
+                                                                    }
+                                                                    None => {}
+                                                                }
+                                                            }
+                                                            raw_right_neighbor.borrow_mut().children.insert(0, Some(raw_left_neighbor.clone()));
+                                                            raw_node.borrow_mut().kvs[child_or_keyval.index as usize] = raw_left_neighbor.borrow().get_last_kv();
+                                                            let _ = raw_left_neighbor.borrow_mut().kvs.split_off(raw_left_neighbor.borrow().kvs.len()-1);
+                                                            let _ = raw_left_neighbor.borrow_mut().children.split_off(raw_left_neighbor.borrow().children.len()-1);
+                                                            node = Some(raw_right_neighbor.clone());
+                                                        }
+                                                        None => {
+                                                            node = None
+                                                        }
+                                                    }
+                                                } else {
+                                                    match right_neighbor {
+                                                        Some(raw_right_neighbor) => {
+                                                            if raw_right_neighbor.borrow().is_not_empty() {
+                                                                raw_left_neighbor.borrow_mut().kvs.insert(0, raw_node.borrow().get_kv(child_or_keyval.index as usize));
+                                                                let right_neighbor_first_node = raw_right_neighbor.borrow_mut().get_first_child();
+                                                                if !raw_right_neighbor.borrow().is_leaf {
+                                                                    match &right_neighbor_first_node {
+                                                                        Some(raw_right_neighbor_last_node) => {
+                                                                            raw_right_neighbor_last_node.borrow_mut().set_parent(Some(raw_left_neighbor.clone()));
+                                                                        }
+                                                                        None => {}
+                                                                    }
+                                                                }
+                                                                raw_left_neighbor.borrow_mut().children.insert(0, Some(raw_right_neighbor.clone()));
+                                                                raw_node.borrow_mut().kvs[child_or_keyval.index as usize] = raw_right_neighbor.borrow().get_first_kv();
+                                                                let _ = raw_right_neighbor.borrow_mut().kvs.remove(0);
+                                                                let _ = raw_right_neighbor.borrow_mut().children.remove(0);
+                                                                node = Some(raw_left_neighbor.clone());
+                                                            } else {
+                                                                let merge_node = self.merge(Some(raw_left_neighbor.clone()), Some(raw_right_neighbor.clone()), raw_node.borrow().get_kv(child_or_keyval.index as usize));
+                                                                raw_node.borrow_mut().remove_keyval(child_or_keyval.index as usize, k);
+                                                                if !raw_node.borrow().is_not_empty() {
+                                                                    match &merge_node {
+                                                                        Some(raw_merge_node) => {
+                                                                            raw_merge_node.borrow_mut().set_parent(None);
+                                                                            self.root = Some(raw_merge_node.clone());
+                                                                            self.height = self.height - 1;
+                                                                        }
+                                                                        None => {}
+                                                                    }
+                                                                }
+                                                                node = merge_node;
+                                                            }
+                                                        }
+                                                        None => {
+                                                            node = None;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            None => {
+                                                node = None;
+                                            }
+                                        }
+                                        node = None;
+                                    }
+                                }
+                                None => {
+                                    node = None;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            None => {}
+        }
+    }
 }
 
 fn main() {
-    // test_bst("valid bst", init_valid_bst_tree());
-    // test_bst("invalid bst", init_invalid_bst_tree());
 }
