@@ -38,11 +38,13 @@ fn partion(nums:&mut [u32], left: usize, right: usize) -> usize {
             break
         }
     }
-    println!("{} {} =====", pivot, left);
     left
 }
 
 fn quick_sort(nums:&mut [u32], left: usize, right: usize) {
+    if nums.len() < 2 {
+        return
+    }
     if left < right {
         let mid = partion(nums, left, right);
         // partion(nums, left, mid-1);
@@ -54,6 +56,54 @@ fn quick_sort(nums:&mut [u32], left: usize, right: usize) {
             quick_sort(nums, mid+1, right);
         }
     }
+}
+
+fn insert_sort(nums:&mut [u32]) {
+    if nums.len() < 2 {
+        return
+    }
+
+    let length = nums.len();
+    for index in 0..length {
+        let v = nums[index];
+        let mut nosmall = true;
+        for k in (0..index).rev() {
+            if nums[k] > v {
+                nums[k+1] = nums[k];
+            } else {
+                nosmall = false;
+                nums[k+1] = v;
+                break;
+            }
+        }
+        if nosmall {
+            nums[0] = v;
+        }
+    }
+}
+
+fn select_sort(nums:&mut [u32]) {
+    if nums.len() < 2 {
+        return
+    }
+
+    let length = nums.len();
+    for index in 0..length {
+        let mut swap_index = index;
+        let mut swap_small_v = nums[swap_index];
+
+        for select_index in swap_index+1..length {
+            if nums[select_index] < swap_small_v {
+                swap_index = select_index;
+                swap_small_v = nums[swap_index];
+            }
+        }
+
+        if swap_index != index {
+            nums[swap_index] = nums[index];
+            nums[index] = swap_small_v;
+        }
+    }    
 }
 
 fn main() {
@@ -78,4 +128,36 @@ fn main() {
     println!("before quick sort {:?}", nums);
     quick_sort(nums, left, right);
     println!("after quick sort {:?}", nums);
+
+    let mut nums = &mut [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    println!("before insert sort {:?}", nums);
+    insert_sort(nums);
+    println!("after insert sort {:?}", nums);
+
+    let mut nums = &mut [2, 5, 4, 1, 9, 6, 3, 8, 7, 6, 10];
+    println!("before insert sort {:?}", nums);
+    insert_sort(nums);
+    println!("after insert sort {:?}", nums);
+
+
+    let mut nums = &mut [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+    println!("before insert sort {:?}", nums);
+    insert_sort(nums);
+    println!("after insert sort {:?}", nums);
+
+    let mut nums = &mut [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    println!("before select sort {:?}", nums);
+    select_sort(nums);
+    println!("after select sort {:?}", nums);
+
+    let mut nums = &mut [2, 5, 4, 1, 9, 6, 3, 8, 7, 6, 10];
+    println!("before select sort {:?}", nums);
+    select_sort(nums);
+    println!("after select sort {:?}", nums);
+
+
+    let mut nums = &mut [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+    println!("before select sort {:?}", nums);
+    select_sort(nums);
+    println!("after select sort {:?}", nums);
 }
