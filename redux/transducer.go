@@ -6,8 +6,9 @@ import (
 
 type Words []string
 
-type Reducer func(Words, string) Words
-type ConcatReducer func(string, string) string
+type Reducer func(interface{}, interface{}) interface{}
+
+// type ConcatReducer func(string, string) string
 
 // func (w Words) Filter(judge func(str string) bool) Words {
 // 	v := make(Words, 0, len(w))
@@ -30,14 +31,16 @@ type ConcatReducer func(string, string) string
 func (w Words) Map(r Reducer) Words {
 	v := make(Words, 0, len(w))
 	for _, s := range w {
-		v = r(v, s)
+		newV := r(v, s)
+		v = newV.(Words)
 	}
 	return v
 }
 
 func FilterReducer(judge func(str string) bool, combine Reducer) Reducer {
-	return func(v Words, s string) Words {
-		if judge(s) {
+	return func(v interface{}, s interface{}) interface{} {
+		sStr := s.(string)
+		if judge(sStr) {
 			// v = append(v, s)
 			// listCombine(v, s)
 			return combine(v, s)
@@ -47,18 +50,20 @@ func FilterReducer(judge func(str string) bool, combine Reducer) Reducer {
 }
 
 func MapReducer(transform func(str string) string, combine Reducer) Reducer {
-	return func(v Words, s string) Words {
+	return func(v interface{}, s interface{}) interface{} {
 		// v = append(v, transform(s))
 		// return v
 		// return listCombine(v, transform(s))
-		return combine(v, transform(s))
+		sStr := s.(string)
+		return combine(v, transform(sStr))
 	}
 }
 
 func filterReducer(judge func(str string) bool) func(Reducer) Reducer {
 	return func(combine Reducer) Reducer {
-		return func(v Words, s string) Words {
-			if judge(s) {
+		return func(v interface{}, s interface{}) interface{} {
+			sStr := s.(string)
+			if judge(sStr) {
 				// v = append(v, s)
 				// return v
 				// listCombine(v, s)
@@ -71,22 +76,27 @@ func filterReducer(judge func(str string) bool) func(Reducer) Reducer {
 
 func mapReducer(transform func(str string) string) func(Reducer) Reducer {
 	return func(combine Reducer) Reducer {
-		return func(v Words, s string) Words {
+		return func(v interface{}, s interface{}) interface{} {
 			// v = append(v, transform(s))
 			// return v
 			// listCombine(v, transform(s))
-			return combine(v, transform(s))
+			sStr := s.(string)
+			return combine(v, transform(sStr))
 		}
 	}
 }
 
-var listCombine Reducer = func(v Words, s string) Words {
-	v = append(v, s)
+var listCombine Reducer = func(old interface{}, s interface{}) interface{} {
+	v := old.(Words)
+	sStr := s.(string)
+	v = append(v, sStr)
 	return v
 }
 
-var concat ConcatReducer = func(old string, s string) string {
-	return old + ":" + s
+var concat Reducer = func(old interface{}, s interface{}) interface{} {
+	oldStr := old.(string)
+	sStr := s.(string)
+	return oldStr + ":" + sStr
 }
 
 // 定义可柯里化函数形式
@@ -125,10 +135,16 @@ func main() {
 	// mapDo := mapCurry.curry(upper).curry(listCombine)()
 	// mapUpper, _ := mapDo.(func(Words, string))
 	mapUpper := mapCurry.curry(upper).curry(listCombine)().(Reducer)
-	var words Words
-	words = mapUpper(words, "aaa")
-	words = mapUpper(words, "bbb")
-	words = mapUpper(words, "ccc")
+	var (
+		words    Words
+		newWords interface{}
+	)
+	newWords = mapUpper(words, "aaa")
+	words = newWords.(Words)
+	newWords = mapUpper(words, "bbb")
+	words = newWords.(Words)
+	newWords = mapUpper(words, "ccc")
+	words = newWords.(Words)
 	println(len(words), ": ", strings.Join(words, ","))
 
 	// isCorrectLength := func(str string) bool{
@@ -139,12 +155,18 @@ func main() {
 
 	filterLong := filterCurry.curry(isLongEnough).curry(mapUpper)().(Reducer)
 	filterShort := filterCurry.curry(isShortEnough).curry(filterLong)().(Reducer)
-	words = filterShort(words, "You")
-	words = filterShort(words, "have")
-	words = filterShort(words, "written")
-	words = filterShort(words, "something")
-	words = filterShort(words, "very")
-	words = filterShort(words, "interesting")
+	newWords = filterShort(words, "You")
+	words = newWords.(Words)
+	newWords = filterShort(words, "have")
+	words = newWords.(Words)
+	newWords = filterShort(words, "written")
+	words = newWords.(Words)
+	newWords = filterShort(words, "something")
+	words = newWords.(Words)
+	newWords = filterShort(words, "very")
+	words = newWords.(Words)
+	newWords = filterShort(words, "interesting")
+	words = newWords.(Words)
 	println(len(words), ": ", strings.Join(words, ","))
 
 	isLongEnoughReducer := filterReducer(isLongEnough)
@@ -152,12 +174,18 @@ func main() {
 	upperReducer := mapReducer(upper)
 	upperLongAndShortEnoughReducer := isLongEnoughReducer(isShortEnoughReducer(upperReducer(listCombine)))
 	words = Words{}
-	words = upperLongAndShortEnoughReducer(words, "You")
-	words = upperLongAndShortEnoughReducer(words, "have")
-	words = upperLongAndShortEnoughReducer(words, "written")
-	words = upperLongAndShortEnoughReducer(words, "something")
-	words = upperLongAndShortEnoughReducer(words, "very")
-	words = upperLongAndShortEnoughReducer(words, "interesting")
+	newWords = upperLongAndShortEnoughReducer(words, "You")
+	words = newWords.(Words)
+	newWords = upperLongAndShortEnoughReducer(words, "have")
+	words = newWords.(Words)
+	newWords = upperLongAndShortEnoughReducer(words, "written")
+	words = newWords.(Words)
+	newWords = upperLongAndShortEnoughReducer(words, "something")
+	words = newWords.(Words)
+	newWords = upperLongAndShortEnoughReducer(words, "very")
+	words = newWords.(Words)
+	newWords = upperLongAndShortEnoughReducer(words, "interesting")
+	words = newWords.(Words)
 	println(len(words), ": ", strings.Join(words, ","))
 
 	words = []string{"You", "have", "written", "something", "very", "interesting"}
