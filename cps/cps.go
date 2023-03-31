@@ -354,6 +354,47 @@ func NewCountGenerator() *Generator {
 // 	});
 // };
 
+type just struct {
+	// a    int
+	fmap  func(fn func(int) int) just
+	apply func(a just) just
+}
+
+func identity(i int) int {
+	return i
+}
+
+func Jdust1(b int) just {
+	return just{
+		// a: b,
+		fmap: func(fn func(int) int) just {
+			return Jdust1(fn(b))
+		},
+		apply: func(c just) just {
+			return c.apply(Jdust1(b))
+		},
+	}
+}
+
+func Jdust2(operator func(a int) int) just {
+	return just{
+		// a: b,
+		fmap: func(fn func(int) int) just {
+			return Jdust2(func(b int) int {
+				return fn(operator(b))
+			})
+		},
+		apply: func(c just) just {
+			return c.fmap(operator)
+		},
+	}
+}
+
+func print(b int) int {
+	println(b)
+	return b
+}
+
 func main() {
 	println("===========recursive")
 	println(fact(4000000))
@@ -409,5 +450,24 @@ func main() {
 	g.Next(func(result int) {
 		println("-------6", result)
 	})
-	return
+	
+
+    Jdust1(0).fmap(func(c int) int {
+		return 1 + c
+	}).fmap(func(c int) int {
+		return 2 + c
+	}).fmap(print)
+	// println(b.a)
+	Jdust2(func(c int) int {
+		return c + 2
+	}).apply(Jdust1(0)).fmap(print)
+
+	Jdust2(func(c int) int {
+		return c + 2
+	}).fmap(func(c int) int {
+		return c + 3
+	}).fmap(print).apply(Jdust2(func(c int) int {
+		return c + 4
+	})).apply(Jdust1(0))
+
 }
