@@ -395,6 +395,23 @@ func print(b int) int {
 	return b
 }
 
+type AB struct {
+	A string `json:"a"`
+	B int    `json:"b"`
+}
+
+func InitAB() (interface{}, func(*AB)) {
+	ab := &AB{
+		A: "init",
+		B: 0,
+	}
+	return ab, func(cd *AB) {
+		ab.B = cd.B
+	}
+}
+
+
+
 func main() {
 	println("===========recursive")
 	println(fact(4000000))
@@ -470,4 +487,20 @@ func main() {
 		return c + 4
 	})).apply(Jdust1(0))
 
+
+	ab, fix := InitAB()
+	hk, ok := ab.(*AB)
+	println("a:", hk.A, " b:", hk.B, "ok: ", ok)
+	cd := "{\"a\":\"kkk\", \"b\":20}"
+	json.Unmarshal([]byte(cd), ab)
+	// json.NewDecoder(strings.NewReader(cd)).Decode(ab)
+	hk, _ = ab.(*AB)
+	println("a:", hk.A, " b:", hk.B)
+	ef := &AB{
+		A: "hahaha",
+		B: 100,
+	}
+	fix(ef)
+	hk, _ = ab.(*AB)
+	println("a:", hk.A, " b:", hk.B)
 }
