@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)https://abailly.github.io/posts/cm-arch-design.html -->
+<html class=" js flexbox canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths" lang="en"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+
+  <title>Arnaud Bailly - Anatomy of a Haskell-based Application</title>
+
+  <meta name="description" content="Crafting code since 1994">
+
+  <meta name="author" content="Arnaud Bailly">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="./HaskellApplication/css">
+  <link rel="stylesheet" type="text/css" href="./HaskellApplication/style.css">
+  <link rel="stylesheet" type="text/css" href="./HaskellApplication/default.css">
+  <link rel="stylesheet" type="text/css" href="./HaskellApplication/syntax.css">
+  <script async="" defer="" src="./HaskellApplication/launchpad.bundle.js"></script><script type="text/javascript" async="" src="./HaskellApplication/js"></script><script async="" src="./HaskellApplication/analytics.js"></script><script src="./HaskellApplication/modernizr-2.0.6.min.js"></script>
+  <script src="./HaskellApplication/polyfill.min.js"></script>
+  <script id="MathJax-script" async="" src="./HaskellApplication/tex-mml-chtml.js"></script>
+<script src="./HaskellApplication/embed.js" data-timestamp="1709087897098"></script><style>.jj-flash-note__popper[data-v-44225974]{position:absolute;border:none;outline:0;text-align:center;width:28px;height:28px;background:#f7f8fa;border:1px solid #e5e6eb;border-radius:2px;padding:4px}.jj-flash-note__popper .icon[data-v-44225974]{pointer-events:none}.jj-flash-note__popup.vdr-container{position:absolute;box-sizing:border-box}.jj-flash-note__popup.vdr-container .vdr-handle-tl{top:-4px;left:-4px;cursor:nwse-resize}.jj-flash-note__popup.vdr-container .vdr-handle-tm{top:-2px;left:50%;margin-left:-3px;cursor:ns-resize}.jj-flash-note__popup.vdr-container .vdr-handle-tr{top:-4px;right:-4px;cursor:nesw-resize}.jj-flash-note__popup.vdr-container .vdr-handle-ml{top:50%;margin-top:-3px;left:-2px;cursor:ew-resize}.jj-flash-note__popup.vdr-container .vdr-handle-mr{top:50%;margin-top:-3px;right:-2px;cursor:ew-resize}.jj-flash-note__popup.vdr-container .vdr-handle-bl{bottom:-4px;left:-4px;cursor:nesw-resize}.jj-flash-note__popup.vdr-container .vdr-handle-bm{bottom:-2px;left:50%;margin-left:-4px;cursor:ns-resize}.jj-flash-note__popup.vdr-container .vdr-handle-br{bottom:-4px;right:-4px;cursor:nwse-resize}.jj-flash-note__popup.vdr-container .vdr-handle{box-sizing:border-box;position:absolute;width:7px;height:7px}.jj-flash-note__popup.vdr-container .vdr-handle.vdr-handle-tl.handle-tl{top:0;left:0}.jj-flash-note__popup.vdr-container .vdr-handle.vdr-handle-tr.handle-tr{top:0;right:0}.jj-flash-note__popup.vdr-container .vdr-handle.vdr-handle-bl.handle-bl{bottom:0;left:0}.jj-flash-note__popup.vdr-container .vdr-handle.vdr-handle-br.handle-br{bottom:0;right:0}.jj-flash-note__popup.vdr-container .vdr-handle.vdr-handle-bm.handle-bm,.jj-flash-note__popup.vdr-container .vdr-handle.vdr-handle-tm.handle-tm{left:10px;right:10px;width:unset;margin-left:0}.jj-flash-note__popup.vdr-container .vdr-handle.vdr-handle-ml.handle-ml,.jj-flash-note__popup.vdr-container .vdr-handle.vdr-handle-mr.handle-mr{top:10px;bottom:10px;height:unset;margin-top:0}.jj-flash-note__popup[data-v-45165cc7]{position:absolute;border:1px solid #e4e6eb;filter:drop-shadow(0 2px 15px rgba(0, 0, 0, .2));border-radius:4px;overflow:hidden;z-index:9999;background-color:#fff}.jj-flash-note__frame[data-v-45165cc7]{border:none}.jj-flash-note__app[data-v-6ad74fae]{z-index:9999;position:fixed;left:0;top:0}.jj-flash-note__app .mask[data-v-6ad74fae]{position:fixed;left:0;right:0;top:0;bottom:0;z-index:9000;background-color:rgba(0,0,0,.4);opacity:1}.jj-flash-note__app .fade-enter-active[data-v-6ad74fae],.jj-flash-note__app .fade-leave-active[data-v-6ad74fae]{transition:opacity .15s ease}.jj-flash-note__app .fade-enter-from[data-v-6ad74fae],.jj-flash-note__app .fade-leave-to[data-v-6ad74fae]{opacity:0}[data-v-41285de6]:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark[data-v-41285de6]{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}.juejin-search[data-v-41285de6]{display:flex;width:682px;height:46px;border-radius:2px;flex-direction:row;align-items:center;justify-content:center;position:relative}.juejin-search .search-anim[data-v-41285de6]{position:absolute;left:8px;width:28px;height:28px;object-fit:contain;animation-play-state:paused}.juejin-search .search-anim.slide-right-enter-active[data-v-41285de6],.juejin-search .search-anim.slide-right-leave-active[data-v-41285de6]{transition:width .3s linear}.juejin-search .search-anim.slide-right-enter-from[data-v-41285de6],.juejin-search .search-anim.slide-right-leave-to[data-v-41285de6]{width:0}.juejin-search .juejin-search-logo[data-v-41285de6]{right:16px;position:absolute;width:23px;height:18px;object-fit:contain}.juejin-search .juejin-search-logo path[data-v-41285de6]{transition:all .3s linear}.juejin-search #juejin-search-input-global[data-v-41285de6]{height:100%;width:100%}.juejin-search #juejin-search-input-global .input[data-v-41285de6]{padding:0 39px 0 33px;width:100%;height:100%;outline:0;border:none;border-radius:2px;color:var(--jjext-color-font-1);font-size:18px;line-height:22px;font-weight:500;caret-color:transparent;box-sizing:border-box;background-color:var(--jjext-color-layer-4-plugin)}.juejin-search #juejin-search-input-global .input.active[data-v-41285de6]{border:2px solid var(--jjext-color-font-brand-4)}.juejin-search #juejin-search-input-global .input.animation-stopped[data-v-41285de6]{caret-color:#1e80ff;padding-left:16px}.juejin-search #juejin-search-input-global .input[data-v-41285de6]::placeholder{font-weight:400;color:#86909c}.calculator[data-v-4faf9c0e]{display:flex;align-items:center;height:36px;padding:0 16px;cursor:pointer}.calculator .result[data-v-4faf9c0e]{font-size:14px;text-align:start;font-weight:500;line-height:22px;color:#1d2129;margin:0 12px;text-overflow:ellipsis;flex:1 0 auto;overflow:hidden;white-space:nowrap;max-width:494px}.calculator .hint[data-v-4faf9c0e]{font-size:14px;line-height:22px;color:#8a919f}[data-v-ef0f272e]:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark[data-v-ef0f272e]{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}.search-action[data-v-ef0f272e]{display:flex;align-items:center;box-sizing:border-box;user-select:none;cursor:pointer;height:36px;border-left:4px solid transparent;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:all .15s linear;padding:0 16px 0 12px}.search-action.active[data-v-ef0f272e]{border-left-color:var(--jjext-color-font-brand1-normal);background-color:#f4f5f5}.search-action .search-content[data-v-ef0f272e]{display:flex;align-items:center;flex:1 0 auto;margin-right:16px}.search-action .search-content .search-content__logo[data-v-ef0f272e]{width:28px;height:28px;margin:0}.search-action .search-content .search-content__engine[data-v-ef0f272e],.search-action .search-content .search-content__keyword[data-v-ef0f272e]{font-size:14px;font-weight:500;line-height:22px}.search-action .search-content .search-content__keyword[data-v-ef0f272e]{color:var(--jjext-color-font-1);margin:0 4px 0 12px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;max-width:396px}.search-action .search-content .search-content__engine[data-v-ef0f272e]{color:var(--jjext-color-font-brand1-normal)}.search-action .hint[data-v-ef0f272e]{font-size:14px;line-height:22px;color:var(--jjext-color-font-brand1-normal)}em[data-v-b1604592]{font-style:normal;color:#f53f3f}[data-v-6cedf366]:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark[data-v-6cedf366]{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}.search-suggest[data-v-6cedf366]{background:var(--jjext-color-layer-4);padding:0 4px 8px 4px}.search-suggest .calculator.active[data-v-6cedf366],.search-suggest .search-action.active[data-v-6cedf366]{background:var(--jjext-color-layer-2-1)}.search-suggest .calculator[data-v-6cedf366]{transition:background-color .15s linear}.search-suggest .list[data-v-6cedf366]{display:flex;border-top:1px solid var(--jjext-color-layer-gray-1-2);flex-direction:column;padding-top:4px}.search-suggest .list .item[data-v-6cedf366]{display:flex;flex-direction:row;align-items:center;height:36px;cursor:pointer}.search-suggest .list .item .content[data-v-6cedf366]{color:var(--jjext-color-font-1);font-size:14px}.search-suggest .list .item.active[data-v-6cedf366],.search-suggest .list .item[data-v-6cedf366]:hover{background:var(--jjext-color-layer-2-1)}.search-suggest .list .tool-item[data-v-6cedf366]{position:relative;padding:0 9px 0 4px}.search-suggest .list .tool-item .tool-icon[data-v-6cedf366]{width:24px;height:24px;background-size:100% 100%;background-position:0 0;background-repeat:no-repeat}.search-suggest .list .tool-item .content[data-v-6cedf366]{margin-left:8px}.search-suggest .list .tool-item .icon-tool-arrow[data-v-6cedf366]{opacity:0;transition:all .15s linear;position:absolute;stroke:var(--jjext-color-font-brand1-normal);top:50%;transform:translateY(-50%);right:9px}.search-suggest .list .tool-item.active .icon-tool-arrow[data-v-6cedf366],.search-suggest .list .tool-item:hover .icon-tool-arrow[data-v-6cedf366]{opacity:1}.search-suggest .list .suggest-item[data-v-6cedf366]{padding:0 7px;transition:background-color .15s linear}.search-suggest .list .suggest-item .icon-search[data-v-6cedf366]{stroke:var(--jjext-color-font-4)}.search-suggest .list .suggest-item .content[data-v-6cedf366]{margin:0 0 0 12px}.search-suggest .list .suggest-item[data-v-6cedf366] .highlight-keyword{color:var(--jjext-color-font-3)}.search-suggest .setting-hint[data-v-6cedf366]{display:flex;align-items:center;justify-content:flex-end;margin:8px 16px 0 16px}.search-suggest .setting-hint .text[data-v-6cedf366]{color:#8a919f;line-height:22px;cursor:pointer;user-select:none}.search-suggest .setting-hint .text[data-v-6cedf366]:hover:not(.disabled){color:#1e80ff;transition:all .15s linear}.search-suggest .setting-hint .text.disabled[data-v-6cedf366]{cursor:initial}:root{--jjext-color-input-bg:#f4f5f5;--jjext-color-input-error-bg:#ffece8;--jjext-color-input-placeholder:#86909c;--jjext-color-input-text:#4e5969;--jjext-color-input-icon:#f53f3f}:root .dark{--jjext-color-input-bg:rgba(255, 255, 255, 0.12);--jjext-color-input-error-bg:rgba(255, 81, 50, 0.15);--jjext-color-input-placeholder:#e3e3e3;--jjext-color-input-text:#e3e3e3;--jjext-color-input-icon:#ff6247}[data-v-341e7439]:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark[data-v-341e7439]{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}.input-option[data-v-341e7439]{display:flex;flex-direction:column}.input-option span.error[data-v-341e7439]{margin-left:6.6666666667rem;font-size:1rem;line-height:20px;display:inline-block;height:20px;color:var(--jjext-color-tips)}.input-wrapper[data-v-341e7439]{display:flex;flex-direction:row;align-items:center;width:100%}.input-wrapper label[data-v-341e7439]{width:4em;font-size:1.1666666667rem;line-height:1.8333333333rem;color:var(--jjext-color-thirdly);margin-right:1rem}.input-wrapper .input[data-v-341e7439]{flex:1 0 auto;position:relative}.input-wrapper .input.error .input-inner[data-v-341e7439]{background-color:var(--jjext-color-input-error-bg)}.input-wrapper .input.error .btn-clear[data-v-341e7439]{color:var(--jjext-color-input-icon)}.input-wrapper .input .input-inner[data-v-341e7439]{background:var(--jjext-color-input-bg);border-radius:2px;color:var(--jjext-color-input-text);font-size:1.0833333333rem;line-height:1.8333333333rem;height:2.3333333333rem;padding:0 8px;outline:0;border:none;width:100%}.input-wrapper .input .input-inner[data-v-341e7439]::placeholder{color:var(--jjext-color-input-placeholder)}.input-wrapper .btn-clear[data-v-341e7439]{position:absolute;top:50%;right:0;transform:translateY(-50%);background:0 0;border:none;outline:0;color:var(--jjext-color-fourthly)}.input-wrapper .btn-clear[data-v-341e7439]::before{font-size:10px;line-height:10px}[data-v-5a92de1e]:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark[data-v-5a92de1e]{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}[data-v-5a92de1e]{box-sizing:border-box}.color-tool[data-v-5a92de1e]{padding:0 16px!important}.color-tool .row[data-v-5a92de1e]{display:flex;align-items:center}.color-tool .color-picker[data-v-5a92de1e]{cursor:pointer;outline:0;border:none;padding:0;margin:0;border-radius:2px;background-color:transparent;width:92px;height:40px}.color-tool .color-picker[data-v-5a92de1e]::-webkit-color-swatch-wrapper{padding:3px;border:1px solid transparent;border-radius:4px;transition:all .15s linear}.color-tool .color-picker[data-v-5a92de1e]::-webkit-color-swatch-wrapper:hover{border:1px solid #bedaff}.color-tool .color-picker[data-v-5a92de1e]::-webkit-color-swatch{border-radius:2px;border:none}.color-tool .input[data-v-5a92de1e]{transform:translateY(10px);flex:1 1 auto;margin:0 12px}.color-tool .input[data-v-5a92de1e] input.input-inner{height:40px;padding-left:16px;font-size:14px;color:var(--jjext-color-primary);box-sizing:border-box;background:var(--jjext-color-main-bg)}.color-tool .input[data-v-5a92de1e] label{display:none}.color-tool .input[data-v-5a92de1e] span.error{margin-left:16px}.color-tool .input[data-v-5a92de1e] .input-wrapper .btn-clear{right:8px}.color-tool .input[data-v-5a92de1e] .input-wrapper .btn-clear::before{font-size:14px;color:#c9cdd4}.color-tool button[data-v-5a92de1e]{outline:0;border:none;background-color:unset;width:93px;height:40px;font-size:14px}.color-tool .btn-convert[data-v-5a92de1e]{background:var(--jjext-color-brand);border-radius:2px;color:#fff;transition:all .15s linear}.color-tool .btn-convert[data-v-5a92de1e]:hover{background:#5399ff}.color-tool .btn-convert[data-v-5a92de1e]:active{background:#0060dd}.color-tool .btn-copy[data-v-5a92de1e]{background:rgba(30,128,255,.05);border:1px solid rgba(30,128,255,.3);border-radius:2px;color:var(--jjext-color-brand);transition:all .15s linear}.color-tool .btn-copy[data-v-5a92de1e]:hover{background:rgba(30,128,255,.1);border-color:rgba(30,128,255,.45)}.color-tool .btn-copy[data-v-5a92de1e]:active{background:rgba(30,128,255,.2);border-color:rgba(30,128,255,.6)}.color-tool .display[data-v-5a92de1e]{flex:1;text-align:start;background-color:var(--jjext-color-main-bg);height:40px;margin:0 12px;border-radius:2px;line-height:40px;padding-left:16px;font-size:14px;color:var(--jjext-color-primary)}.color-tool .label[data-v-5a92de1e]{width:92px;font-size:16px;font-weight:500;color:var(--jjext-color-primary);text-align:end}.color-tool .row[data-v-5a92de1e]:not(:first-of-type){margin-top:16px}[data-v-6b3fcf66]:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark[data-v-6b3fcf66]{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}.quick-tool-drawer[data-v-6b3fcf66]{z-index:750;position:fixed;right:0;top:0;bottom:0;width:60%;background:var(--jjext-color-thirdly-bg)}.quick-tool-drawer.dark .header .title[data-v-6b3fcf66]{color:#e3e3e3}.quick-tool-drawer .quick-tool-drawer__header__[data-v-6b3fcf66]{position:relative;height:64px;padding:0 16px;display:flex;flex-direction:row;align-items:center}.quick-tool-drawer .quick-tool-drawer__header__ .quick-tool-drawer__icon__[data-v-6b3fcf66]{width:40px;height:40px}.quick-tool-drawer .quick-tool-drawer__header__ .quick-tool-drawer__title__[data-v-6b3fcf66]{margin:0 0 0 9px;padding:0;font-size:16px;font-weight:500;line-height:22px;color:var(--jjext-color-brand)}.quick-tool-drawer .quick-tool-drawer__header__ .quick-tool-drawer__btn-close__[data-v-6b3fcf66]{cursor:pointer;position:absolute;right:16px;top:50%;font-size:18px;transform:translateY(-50%)}.quick-tool-drawer .quick-tool-drawer__header__ .quick-tool-drawer__btn-close__[data-v-6b3fcf66]::after{display:block;content:" ";position:absolute;padding:10px;width:100%;height:100%;top:-50%;left:-50%}.quick-tool-drawer .quick-tool-drawer__header__ .quick-tool-drawer__btn-close__ svg[data-v-6b3fcf66]{fill:var(--jjext-color-thirdly)}.quick-tool-drawer .quick-tool-drawer__tool__[data-v-6b3fcf66]{width:100%;height:100%;box-sizing:border-box}[data-v-19f1e2c8]:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark[data-v-19f1e2c8]{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}.mask[data-v-19f1e2c8]{position:fixed;left:0;right:0;top:0;bottom:0;z-index:600;background-color:var(--jjext-color-mask)}.slide-left-enter-active,.slide-left-leave-active{transition:transform .3s linear}.slide-left-enter-from,.slide-left-leave-to{transform:translateX(100%)}[data-v-0a4e498b]:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark[data-v-0a4e498b]{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}.search-app[data-v-0a4e498b]{z-index:9999;padding-top:160px;position:fixed;left:0;right:0;top:0;bottom:0;display:flex;align-items:flex-start;justify-content:center}.search-app.extension[data-v-0a4e498b]{z-index:500}@media (max-height:720px){.search-app.tool-active[data-v-0a4e498b]{padding-top:80px}}@media (max-height:640px){.search-app.tool-active[data-v-0a4e498b]{padding-top:30px}}.search-app .search-app__wrapper__[data-v-0a4e498b]{overflow:hidden;border-radius:4px;border:1px solid var(--jjext-color-font-brand1-normal);background:var(--jjext-color-layer-4);box-shadow:0 0 0 4px rgba(30,128,255,.2),0 0 20px rgba(0,0,0,.15);backdrop-filter:blur(15px)}.search-app .search-app__wrapper__ .search-result[data-v-0a4e498b]{margin-top:8px}.search-app .search-app__wrapper__ .search-result .tool[data-v-0a4e498b]{padding:0 8px}.search-app .search-app__wrapper__[data-v-0a4e498b] .search-suggest{padding:0 0 8px 0}.search-app .search-app__wrapper__[data-v-0a4e498b] .search-suggest .list{border-top:none;padding-left:8px;padding-right:8px}.search-app .search-app__wrapper__[data-v-0a4e498b] .search-suggest .list .suggest-item{padding:0 13px}.search-app .search-app__wrapper__[data-v-0a4e498b] .search-suggest .list .suggest-item .content{margin:0 0 0 17px}.search-app .search-app__wrapper__[data-v-0a4e498b] .search-suggest .list .tool-item{padding:0 9px 0 10px}.search-app .search-app__wrapper__[data-v-0a4e498b] .search-suggest .list .tool-item .content{margin-left:12px}.search-app .juejin-search[data-v-0a4e498b]{margin:8px}:root{--jjext-color-brand:#1e80ff;--jjext-color-brand-light:#e8f3ff;--jjext-color-nav-title:#86909c;--jjext-color-nav-popup-bg:#ffffff;--jjext-color-primary:#1d2129;--jjext-color-secondary-app:#4e5969;--jjext-color-thirdly:#86909c;--jjext-color-hover:#1e80ff;--jjext-color-hover-thirdly:#86909c;--jjext-color-dropdown-text:#1e80ff;--jjext-color-divider:#e5e6eb;--jjext-color-main-bg:#f4f5f5;--jjext-color-secondary-bg:#ffffff;--jjext-color-thirdly-bg:#f4f5f5;--jjext-color-hover-bg:#e8f3ff;--jjext-color-comment-bg:rgba(244, 245, 245, 0.5);--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(232, 243, 255, 0) 0%,
+    rgba(232, 243, 255, 0.8) 25.09%,
+    #e8f3ff 50.16%,
+    rgba(232, 243, 255, 0.8) 75.47%,
+    rgba(232, 243, 255, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#ffffff;--jjext-color-nav-bg:rgba(255, 255, 255, 0.13);--jjext-color-nav-selected-border:rgba(229, 230, 235, 0.3);--jjext-color-tips:#f53f3f;--jjext-color-fourthly:#c9cdd4;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#e5e6eb;--jjext-color-icon-search:#ffffff;--jjext-color-navbar-icon:#1e80ff;--jjext-color-layout-dropdown-bg:rgba(232, 243, 255, 0.8);--jjext-color-layout-title:#4e5969;--jjext-color-layout-title-active:#1e80ff;--jjext-color-layout-icon-outline:rgba(30, 128, 255, 0.5);--jjext-color-layout-icon-fill:#ffffff;--jjext-color-layer-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-layer-4:#ffffff;--jjext-color-font-brand1-normal:#1e80ff;--jjext-color-font-brand-4:#abcdff;--jjext-color-font-1:#252933;--jjext-color-font-2:#515767;--jjext-color-font-3:#8a919f;--jjext-color-font-4:#c2c8d1;--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.05);--jjext-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-gray-0:#fff;--jjext-color-gray-1-1:#e4e6eb;--jjext-color-gray-1-2:rgba(228, 230, 235, 0.5);--jjext-color-gray-1-3:#e4e6eb;--jjext-color-gray-2:#f2f3f5;--jjext-color-gray-3:#f7f8fa;--jjext-color-background:#f2f3f5;--jjext-color-layer-1:#fff;--jjext-color-layer-2-1:#f7f8fa;--jjext-color-layer-2-2:rgba(247, 248, 250, 0.7);--jjext-color-layer-3-fill:#f2f3f5;--jjext-color-layer-3-border:#e4e6eb;--jjext-color-layer-4-dropdown:#fff;--jjext-color-layer-5:#fff;--jjext-color-brand-1-normal:#1e80ff;--jjext-color-brand-2-hover:#1171ee;--jjext-color-brand-3-click:#0060dd;--jjext-color-brand-4-disable:#abcdff;--jjext-color-brand-5-light:#eaf2ff;--jjext-color-mask-1:rgba(0, 0, 0, 0.4);--jjext-color-mask-2:#fff;--jjext-color-mask-3:none;--jjext-color-mask-6:#ffffff;--jjext-color-brand-fill1-normal:rgba(30, 128, 255, 0.05);--jjext-color-brand-fill2-hover:rgba(30, 128, 255, 0.1);--jjext-color-brand-fill3-click:rgba(30, 128, 255, 0.2);--jjext-color-brand-stroke1-normal:rgba(30, 128, 255, 0.3);--jjext-color-brand-stroke2-hover:rgba(30, 128, 255, 0.45);--jjext-color-brand-stroke3-click:rgba(30, 128, 255, 0.6);--jjext-color-font_danger:#ff5132;--jjext-color-shade-1:rgba(0, 0, 0, 0.4);--jjext-color-popup:#fff;--jjext-color-popover:rgba(0, 0, 0, 0.8)}:root .dark{--jjext-color-brand:#1352a3;--jjext-color-nav-title:#e3e3e3;--jjext-color-nav-popup-bg:#1352a3;--jjext-color-primary:#e3e3e3;--jjext-color-secondary-app:#a9a9a9;--jjext-color-thirdly:#7d7d7f;--jjext-color-hover:#eeeeee;--jjext-color-hover-thirdly:#878789;--jjext-color-dropdown-text:#878789;--jjext-color-divider:#4a4a4a;--jjext-color-main-bg:#121212;--jjext-color-secondary-bg:#272727;--jjext-color-thirdly-bg:#3a3a3a;--jjext-color-hover-bg:#3a3a3a;--jjext-color-comment-bg:#313131;--jjext-hover-bg:linear-gradient(
+    90deg,
+    rgba(58, 58, 58, 0) 0%,
+    rgba(58, 58, 58, 0.8) 25.09%,
+    #3a3a3a 50.16%,
+    rgba(58, 58, 58, 0.8) 75.47%,
+    rgba(58, 58, 58, 0) 100%
+  );--jjext-color-mask:rgba(0, 0, 0, 0.4);--jjext-color-quick-nav-text:#e3e3e3;--jjext-color-nav-bg:rgb(30, 30, 30);--jjext-color-nav-selected-border:#4a4a4a;--jjext-color-tips:#bc3030;--jjext-color-fourthly:#878789;--jjext-color-shadow:rgba(0, 0, 0, 0.16);--jjext-color-grey-triangle:#3a3a3a;--jjext-color-icon-search:#e3e3e3;--jjext-color-navbar-icon:#e3e3e3;--jjext-color-layout-dropdown-bg:rgba(125, 125, 127, 0.8);--jjext-color-layout-title:#eeeeee;--jjext-color-layout-title-active:#eeeeee;--jjext-color-layout-icon-outline:#131313;--jjext-color-layout-icon-fill:#e3e3e3;--jjext-color-layer-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-layer-4:#2f2f2f;--jjext-color-font-brand1-normal:#4495ff;--jjext-color-font-brand-4:rgba(19, 113, 236, 0.2);--jjext-color-font-1:rgba(255, 255, 255, 0.9);--jjext-color-font-2:rgba(255, 255, 255, 0.7);--jjext-color-font-3:rgba(255, 255, 255, 0.55);--jjext-color-font-4:rgba(255, 255, 255, 0.45);--jjext-color-font-white:#fff;--jjext-color-layer-4-plugin:rgba(30, 128, 255, 0.1);--jjext-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-gray-0:#000;--jjext-color-gray-1-1:rgba(255, 255, 255, 0.2);--jjext-color-gray-1-2:rgba(255, 255, 255, 0.1);--jjext-color-gray-1-3:#464646;--jjext-color-gray-2:rgba(255, 255, 255, 0.12);--jjext-color-gray-3:rgba(255, 255, 255, 0.08);--jjext-color-background:#000;--jjext-color-layer-1:#181818;--jjext-color-layer-2-1:rgba(255, 255, 255, 0.08);--jjext-color-layer-2-2:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-fill:rgba(255, 255, 255, 0.08);--jjext-color-layer-3-border:rgba(255, 255, 255, 0.2);--jjext-color-layer-4-dropdown:#2f2f2f;--jjext-color-layer-5:rgba(255, 255, 255, 0.12);--jjext-color-brand-1-normal:#2986ff;--jjext-color-brand-2-hover:#1473ed;--jjext-color-brand-3-click:#0563dd;--jjext-color-brand-4-disable:rgba(41, 134, 255, 0.4);--jjext-color-brand-5-light:rgba(30, 128, 255, 0.2);--jjext-color-mask-1:rgba(255, 255, 255, 0.4);--jjext-color-mask-2:#282828;--jjext-color-mask-3:rgba(0, 0, 0, 0.05);--jjext-color-mask-6:#181818;--jjext-color-brand-fill1-normal:rgba(41, 134, 255, 0.15);--jjext-color-brand-fill2-hover:rgba(20, 115, 237, 0.25);--jjext-color-brand-fill3-click:rgba(5, 99, 221, 0.35);--jjext-color-brand-stroke1-normal:rgba(41, 134, 255, 0.4);--jjext-color-brand-stroke2-hover:rgba(20, 115, 237, 0.6);--jjext-color-brand-stroke3-click:rgba(5, 99, 221, 0.6);--jjext-color-font_danger:#f85959;--jjext-color-shade-1:rgba(0, 0, 0, 0.6);--jjext-color-popup:#282828;--jjext-color-popover:#323232}</style><style type="text/css">.CtxtMenu_InfoClose {  top:.2em; right:.2em;}
+.CtxtMenu_InfoContent {  overflow:auto; text-align:left; font-size:80%;  padding:.4em .6em; border:1px inset; margin:1em 0px;  max-height:20em; max-width:30em; background-color:#EEEEEE;  white-space:normal;}
+.CtxtMenu_Info.CtxtMenu_MousePost {outline:none;}
+.CtxtMenu_Info {  position:fixed; left:50%; width:auto; text-align:center;  border:3px outset; padding:1em 2em; background-color:#DDDDDD;  color:black;  cursor:default; font-family:message-box; font-size:120%;  font-style:normal; text-indent:0; text-transform:none;  line-height:normal; letter-spacing:normal; word-spacing:normal;  word-wrap:normal; white-space:nowrap; float:none; z-index:201;  border-radius: 15px;                     /* Opera 10.5 and IE9 */  -webkit-border-radius:15px;               /* Safari and Chrome */  -moz-border-radius:15px;                  /* Firefox */  -khtml-border-radius:15px;                /* Konqueror */  box-shadow:0px 10px 20px #808080;         /* Opera 10.5 and IE9 */  -webkit-box-shadow:0px 10px 20px #808080; /* Safari 3 & Chrome */  -moz-box-shadow:0px 10px 20px #808080;    /* Forefox 3.5 */  -khtml-box-shadow:0px 10px 20px #808080;  /* Konqueror */  filter:progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color="gray", Positive="true"); /* IE */}
+</style><style type="text/css">.CtxtMenu_MenuClose {  position:absolute;  cursor:pointer;  display:inline-block;  border:2px solid #AAA;  border-radius:18px;  -webkit-border-radius: 18px;             /* Safari and Chrome */  -moz-border-radius: 18px;                /* Firefox */  -khtml-border-radius: 18px;              /* Konqueror */  font-family: "Courier New", Courier;  font-size:24px;  color:#F0F0F0}
+.CtxtMenu_MenuClose span {  display:block; background-color:#AAA; border:1.5px solid;  border-radius:18px;  -webkit-border-radius: 18px;             /* Safari and Chrome */  -moz-border-radius: 18px;                /* Firefox */  -khtml-border-radius: 18px;              /* Konqueror */  line-height:0;  padding:8px 0 6px     /* may need to be browser-specific */}
+.CtxtMenu_MenuClose:hover {  color:white!important;  border:2px solid #CCC!important}
+.CtxtMenu_MenuClose:hover span {  background-color:#CCC!important}
+.CtxtMenu_MenuClose:hover:focus {  outline:none}
+</style><style type="text/css">.CtxtMenu_Menu {  position:absolute;  background-color:white;  color:black;  width:auto; padding:5px 0px;  border:1px solid #CCCCCC; margin:0; cursor:default;  font: menu; text-align:left; text-indent:0; text-transform:none;  line-height:normal; letter-spacing:normal; word-spacing:normal;  word-wrap:normal; white-space:nowrap; float:none; z-index:201;  border-radius: 5px;                     /* Opera 10.5 and IE9 */  -webkit-border-radius: 5px;             /* Safari and Chrome */  -moz-border-radius: 5px;                /* Firefox */  -khtml-border-radius: 5px;              /* Konqueror */  box-shadow:0px 10px 20px #808080;         /* Opera 10.5 and IE9 */  -webkit-box-shadow:0px 10px 20px #808080; /* Safari 3 & Chrome */  -moz-box-shadow:0px 10px 20px #808080;    /* Forefox 3.5 */  -khtml-box-shadow:0px 10px 20px #808080;  /* Konqueror */}
+.CtxtMenu_MenuItem {  padding: 1px 2em;  background:transparent;}
+.CtxtMenu_MenuArrow {  position:absolute; right:.5em; padding-top:.25em; color:#666666;  font-family: null; font-size: .75em}
+.CtxtMenu_MenuActive .CtxtMenu_MenuArrow {color:white}
+.CtxtMenu_MenuArrow.CtxtMenu_RTL {left:.5em; right:auto}
+.CtxtMenu_MenuCheck {  position:absolute; left:.7em;  font-family: null}
+.CtxtMenu_MenuCheck.CtxtMenu_RTL { right:.7em; left:auto }
+.CtxtMenu_MenuRadioCheck {  position:absolute; left: .7em;}
+.CtxtMenu_MenuRadioCheck.CtxtMenu_RTL {  right: .7em; left:auto}
+.CtxtMenu_MenuInputBox {  padding-left: 1em; right:.5em; color:#666666;  font-family: null;}
+.CtxtMenu_MenuInputBox.CtxtMenu_RTL {  left: .1em;}
+.CtxtMenu_MenuComboBox {  left:.1em; padding-bottom:.5em;}
+.CtxtMenu_MenuSlider {  left: .1em;}
+.CtxtMenu_SliderValue {  position:absolute; right:.1em; padding-top:.25em; color:#333333;  font-size: .75em}
+.CtxtMenu_SliderBar {  outline: none; background: #d3d3d3}
+.CtxtMenu_MenuLabel {  padding: 1px 2em 3px 1.33em;  font-style:italic}
+.CtxtMenu_MenuRule {  border-top: 1px solid #DDDDDD;  margin: 4px 3px;}
+.CtxtMenu_MenuDisabled {  color:GrayText}
+.CtxtMenu_MenuActive {  background-color: #606872;  color: white;}
+.CtxtMenu_MenuDisabled:focus {  background-color: #E8E8E8}
+.CtxtMenu_MenuLabel:focus {  background-color: #E8E8E8}
+.CtxtMenu_ContextMenu:focus {  outline:none}
+.CtxtMenu_ContextMenu .CtxtMenu_MenuItem:focus {  outline:none}
+.CtxtMenu_SelectionMenu {  position:relative; float:left;  border-bottom: none; -webkit-box-shadow:none; -webkit-border-radius:0px; }
+.CtxtMenu_SelectionItem {  padding-right: 1em;}
+.CtxtMenu_Selection {  right: 40%; width:50%; }
+.CtxtMenu_SelectionBox {  padding: 0em; max-height:20em; max-width: none;  background-color:#FFFFFF;}
+.CtxtMenu_SelectionDivider {  clear: both; border-top: 2px solid #000000;}
+.CtxtMenu_Menu .CtxtMenu_MenuClose {  top:-10px; left:-10px}
+</style><style id="MJX-CHTML-styles">
+mjx-container[jax="CHTML"] {
+  line-height: 0;
+}
+
+mjx-container [space="1"] {
+  margin-left: .111em;
+}
+
+mjx-container [space="2"] {
+  margin-left: .167em;
+}
+
+mjx-container [space="3"] {
+  margin-left: .222em;
+}
+
+mjx-container [space="4"] {
+  margin-left: .278em;
+}
+
+mjx-container [space="5"] {
+  margin-left: .333em;
+}
+
+mjx-container [rspace="1"] {
+  margin-right: .111em;
+}
+
+mjx-container [rspace="2"] {
+  margin-right: .167em;
+}
+
+mjx-container [rspace="3"] {
+  margin-right: .222em;
+}
+
+mjx-container [rspace="4"] {
+  margin-right: .278em;
+}
+
+mjx-container [rspace="5"] {
+  margin-right: .333em;
+}
+
+mjx-container [size="s"] {
+  font-size: 70.7%;
+}
+
+mjx-container [size="ss"] {
+  font-size: 50%;
+}
+
+mjx-container [size="Tn"] {
+  font-size: 60%;
+}
+
+mjx-container [size="sm"] {
+  font-size: 85%;
+}
+
+mjx-container [size="lg"] {
+  font-size: 120%;
+}
+
+mjx-container [size="Lg"] {
+  font-size: 144%;
+}
+
+mjx-container [size="LG"] {
+  font-size: 173%;
+}
+
+mjx-container [size="hg"] {
+  font-size: 207%;
+}
+
+mjx-container [size="HG"] {
+  font-size: 249%;
+}
+
+mjx-container [width="full"] {
+  width: 100%;
+}
+
+mjx-box {
+  display: inline-block;
+}
+
+mjx-block {
+  display: block;
+}
+
+mjx-itable {
+  display: inline-table;
+}
+
+mjx-row {
+  display: table-row;
+}
+
+mjx-row > * {
+  display: table-cell;
+}
+
+mjx-mtext {
+  display: inline-block;
+}
+
+mjx-mstyle {
+  display: inline-block;
+}
+
+mjx-merror {
+  display: inline-block;
+  color: red;
+  background-color: yellow;
+}
+
+mjx-mphantom {
+  visibility: hidden;
+}
+
+_::-webkit-full-page-media, _:future, :root mjx-container {
+  will-change: opacity;
+}
+
+mjx-assistive-mml {
+  position: absolute !important;
+  top: 0px;
+  left: 0px;
+  clip: rect(1px, 1px, 1px, 1px);
+  padding: 1px 0px 0px 0px !important;
+  border: 0px !important;
+  display: block !important;
+  width: auto !important;
+  overflow: hidden !important;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+mjx-assistive-mml[display="block"] {
+  width: 100% !important;
+}
+
+mjx-c::before {
+  display: block;
+  width: 0;
+}
+
+.MJX-TEX {
+  font-family: MJXZERO, MJXTEX;
+}
+
+.TEX-B {
+  font-family: MJXZERO, MJXTEX-B;
+}
+
+.TEX-I {
+  font-family: MJXZERO, MJXTEX-I;
+}
+
+.TEX-MI {
+  font-family: MJXZERO, MJXTEX-MI;
+}
+
+.TEX-BI {
+  font-family: MJXZERO, MJXTEX-BI;
+}
+
+.TEX-S1 {
+  font-family: MJXZERO, MJXTEX-S1;
+}
+
+.TEX-S2 {
+  font-family: MJXZERO, MJXTEX-S2;
+}
+
+.TEX-S3 {
+  font-family: MJXZERO, MJXTEX-S3;
+}
+
+.TEX-S4 {
+  font-family: MJXZERO, MJXTEX-S4;
+}
+
+.TEX-A {
+  font-family: MJXZERO, MJXTEX-A;
+}
+
+.TEX-C {
+  font-family: MJXZERO, MJXTEX-C;
+}
+
+.TEX-CB {
+  font-family: MJXZERO, MJXTEX-CB;
+}
+
+.TEX-FR {
+  font-family: MJXZERO, MJXTEX-FR;
+}
+
+.TEX-FRB {
+  font-family: MJXZERO, MJXTEX-FRB;
+}
+
+.TEX-SS {
+  font-family: MJXZERO, MJXTEX-SS;
+}
+
+.TEX-SSB {
+  font-family: MJXZERO, MJXTEX-SSB;
+}
+
+.TEX-SSI {
+  font-family: MJXZERO, MJXTEX-SSI;
+}
+
+.TEX-SC {
+  font-family: MJXZERO, MJXTEX-SC;
+}
+
+.TEX-T {
+  font-family: MJXZERO, MJXTEX-T;
+}
+
+.TEX-V {
+  font-family: MJXZERO, MJXTEX-V;
+}
+
+.TEX-VB {
+  font-family: MJXZERO, MJXTEX-VB;
+}
+
+mjx-stretchy-v mjx-c, mjx-stretchy-h mjx-c {
+  font-family: MJXZERO, MJXTEX-S1, MJXTEX-S4, MJXTEX, MJXTEX-A ! important;
+}
+
+@font-face /* 0 */ {
+  font-family: MJXZERO;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Zero.woff") format("woff");
+}
+
+@font-face /* 1 */ {
+  font-family: MJXTEX;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Main-Regular.woff") format("woff");
+}
+
+@font-face /* 2 */ {
+  font-family: MJXTEX-B;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Main-Bold.woff") format("woff");
+}
+
+@font-face /* 3 */ {
+  font-family: MJXTEX-I;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Math-Italic.woff") format("woff");
+}
+
+@font-face /* 4 */ {
+  font-family: MJXTEX-MI;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Main-Italic.woff") format("woff");
+}
+
+@font-face /* 5 */ {
+  font-family: MJXTEX-BI;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Math-BoldItalic.woff") format("woff");
+}
+
+@font-face /* 6 */ {
+  font-family: MJXTEX-S1;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Size1-Regular.woff") format("woff");
+}
+
+@font-face /* 7 */ {
+  font-family: MJXTEX-S2;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Size2-Regular.woff") format("woff");
+}
+
+@font-face /* 8 */ {
+  font-family: MJXTEX-S3;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Size3-Regular.woff") format("woff");
+}
+
+@font-face /* 9 */ {
+  font-family: MJXTEX-S4;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Size4-Regular.woff") format("woff");
+}
+
+@font-face /* 10 */ {
+  font-family: MJXTEX-A;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_AMS-Regular.woff") format("woff");
+}
+
+@font-face /* 11 */ {
+  font-family: MJXTEX-C;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Calligraphic-Regular.woff") format("woff");
+}
+
+@font-face /* 12 */ {
+  font-family: MJXTEX-CB;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Calligraphic-Bold.woff") format("woff");
+}
+
+@font-face /* 13 */ {
+  font-family: MJXTEX-FR;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Fraktur-Regular.woff") format("woff");
+}
+
+@font-face /* 14 */ {
+  font-family: MJXTEX-FRB;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Fraktur-Bold.woff") format("woff");
+}
+
+@font-face /* 15 */ {
+  font-family: MJXTEX-SS;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_SansSerif-Regular.woff") format("woff");
+}
+
+@font-face /* 16 */ {
+  font-family: MJXTEX-SSB;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_SansSerif-Bold.woff") format("woff");
+}
+
+@font-face /* 17 */ {
+  font-family: MJXTEX-SSI;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_SansSerif-Italic.woff") format("woff");
+}
+
+@font-face /* 18 */ {
+  font-family: MJXTEX-SC;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Script-Regular.woff") format("woff");
+}
+
+@font-face /* 19 */ {
+  font-family: MJXTEX-T;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Typewriter-Regular.woff") format("woff");
+}
+
+@font-face /* 20 */ {
+  font-family: MJXTEX-V;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Vector-Regular.woff") format("woff");
+}
+
+@font-face /* 21 */ {
+  font-family: MJXTEX-VB;
+  src: url("https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2/MathJax_Vector-Bold.woff") format("woff");
+}
+</style><meta http-equiv="origin-trial" content="AymqwRC7u88Y4JPvfIF2F37QKylC04248hLCdJAsh8xgOfe/dVJPV3XS3wLFca1ZMVOtnBfVjaCMTVudWM//5g4AAAB7eyJvcmlnaW4iOiJodHRwczovL3d3dy5nb29nbGV0YWdtYW5hZ2VyLmNvbTo0NDMiLCJmZWF0dXJlIjoiUHJpdmFjeVNhbmRib3hBZHNBUElzIiwiZXhwaXJ5IjoxNjk1MTY3OTk5LCJpc1RoaXJkUGFydHkiOnRydWV9"><script async="" id="dsq_recs_scr" src="./HaskellApplication/recommendations.js"></script><script src="./HaskellApplication/launchpad-liveramp.js" async="" charset="UTF-8"></script></head>
+<body data-new-gr-c-s-check-loaded="14.1156.0" data-gr-ext-installed="">
+  <div id="container">
+    <header>
+      <div id="company-title">
+        <a href="https://abailly.github.io/"><img id="company-logo" src="./HaskellApplication/logo.png" width="259" height="75" title="igitur.io"></a>
+      </div>
+      <div>
+        <nav class="clearfix">
+        <ul id="menu">
+          <li>
+          <a href="http://drcode.io/">Dr.Code</a>
+          </li>
+          <li>
+          <a href="https://abailly.github.io/about.html">About</a>
+          </li>
+        </ul>
+        </nav>
+      </div>
+    </header>
+    <div id="main" role="main">
+<h1>Anatomy of a Haskell-based Application</h1>
+
+  <h2 class="subtitle"></h2>
+
+<div class="info">Posted on November 16, 2015</div>
+
+<p>This is the first post of a series I am planning to write about my experience developing software as CTO of
+<a href="http://www.capital-match.com/">Capital Match</a>, a Singapore-based startup providing a peer-to-peer lending marketplace for Small and
+Medium Businesses and private and corporate investor.</p>
+<p>This post is about the design and architecture of the system itself, the choices and tradeoffs that were made, whether good or bad. In
+the conclusion I try to provide an assessment of the current situation and reflect on those choices.</p>
+<h1 id="fundamental-design-choices">Fundamental Design Choices</h1>
+<h2 id="haskell">Haskell</h2>
+<p>Basing Capital Match’s tech stack on Haskell was an obvious choice for me from the onset, even if I had had limited professional experience with Haskell before that:</p>
+<ul>
+<li>Haskell is a <a href="http://research.microsoft.com/en-us/um/people/simonpj/papers/history-of-haskell/">very mature language</a> with a
+<a href="https://www.haskell.org/ghc/">state-of-the-art compiler</a> that receives constant attention from a bunch of extremely bright people
+and thus keeps improving and evolving,</li>
+<li>Haskell’s tools for building robust web-based applications is not as mature as what you can find in Java or .Net worlds but it is
+evolving quickly as the platform is gaining traction thanks to efforts from both a vibrant
+<a href="https://wiki.haskell.org/Haskell_Communities_and_Activities_Report">community</a> and few but dedicated
+<a href="https://github.com/commercialhaskell">private bodies</a>,</li>
+<li>Haskell developers are few and far between, but their number is growing and they are more often than not passionate and talented,</li>
+<li>I have been programming for fun and small side projects in Haskell since 2002 and I always have wanted to know how it would feel
+to build a whole system with it. Now I know,</li>
+<li>Because it enforces a strict separation of pure and effectful code, Haskell incentivizes the growth of
+a <a href="http://alistair.cockburn.us/Hexagonal+architecture">Hexagonal Architectures</a>
+aka. <a href="http://c2.com/cgi/wiki?PortsAndAdaptersArchitecture">Ports and adapter</a>: A pure domain kernel which interacts with the
+outside world through <em>adapters</em>.</li>
+</ul>
+<h2 id="event-sourcing">Event Sourcing</h2>
+<p>The system was designed from the onset as an <a href="http://martinfowler.com/eaaDev/EventSourcing.html">event-sourced</a> application: The
+source of truth in the system is a sequence of <em>events</em> where each event defines a transition between two states. At any point in
+time, the state of the system is thus whatever state the current sequence of events leads to. Among the motivations behind using ES
+are:</p>
+<ul>
+<li>Having fun and explore this corner of the design space instead of going for the more traditional RDBMS-based web app,</li>
+<li>Auditability and traceability of all actions impacting data on the platform, a property which is highly-desirable in a banking-like
+system. I have had previous exposure to finance software and they all end up implementing some journalling system to trace
+users actions and data changes,</li>
+<li>Reluctance to add the operational burden of maintaining a RDBMS as part of the system. We could have used SaaS relational (or
+non-relational) database to remove that burden but this implies using yet another tool, learning some other piece of technology,
+using some set of drivers with specific bugs and requirements,</li>
+<li>Personal bias against RDBMS used as runtime storage<a href="https://abailly.github.io/posts/cm-arch-design.html#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>,</li>
+<li>Simplicity of implementation, at least when you don’t require HA, partition tolerance or more generally fault-tolerance: A single
+file to which all events are appended is enough, and this is exactly what we do,</li>
+<li>Avoiding languages impedance mismatch. There is the tradional
+<a href="http://c2.com/cgi/wiki?ObjectRelationalImpedanceMismatch">Object-relational Impedance Mismatch</a> although
+<a href="http://blog.jooq.org/2015/08/26/there-is-no-such-thing-as-object-relational-impedance-mismatch/">some have argued</a> it is not
+where we usually think it is. As argued in the latter I think the real issue is in SQL: SQL is (probably) great for writing
+complex queries<a href="https://abailly.github.io/posts/cm-arch-design.html#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> but not so much for inserting data.</li>
+</ul>
+<h1 id="architecture">Architecture</h1>
+<p>The main interface to the system is a REST-like API providing various resources and actions over those resources. Most exchanges
+with the outside world are done using JSON representation of resources, with some CSV. The <em>User Interface</em> is merely a client of
+the API and is (morally if not to the letter) a single page application. There is also a command-line client which offers access to
+the complete API and is used for administrative purpose.</p>
+<h2 id="models">Models</h2>
+<p>The core of the application is purely functional and made of several loosely coupled <code>BusinessModel</code> instances (think
+Aggregates in <a href="https://en.wikipedia.org/wiki/Domain-driven_design">DDD</a> parlance) that each manage a specific
+sub-domain: <code>Accounting</code> manages accounts and transactions,
+<code>Facility</code> manages facilities lifecycle, <code>Investor</code> and <code>Borrower</code> manage profiles and roles-dependent data, <code>User</code> manages basic
+registration, authentication and settings for users (e.g.&nbsp;features)…</p>
+<p>A <code>BusinessModel</code> is defined as:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">BusinessModel</span> a <span class="kw">where</span></span>
+<span id="cb1-2"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Event</span><span class="ot"> a ::</span> <span class="op">*</span></span>
+<span id="cb1-3"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">data</span> <span class="dt">Command</span><span class="ot"> a ::</span> <span class="op">*</span></span>
+<span id="cb1-4"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  init ::</span> a</span>
+<span id="cb1-5"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ot">  act ::</span> <span class="dt">Command</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Event</span> a</span>
+<span id="cb1-6"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  apply ::</span> <span class="dt">Event</span> a <span class="ot">-&gt;</span> a  <span class="ot">-&gt;</span> a</span></code></pre></div>
+<ul>
+<li>A type of events this model generates</li>
+<li>A type of commands this model can process</li>
+<li>An initial value for the model</li>
+<li>A pair of functions describing which event is generated by a command <em>acting</em> on the model and how an event changes the model when
+it is <em>applied</em> to it</li>
+</ul>
+<p>The state of each BusinessModel instance is computed upon application startup by loading all the events and applying each stored
+event to an <code>init</code>ialised model. Models are then kept in memory while events are stored persistently. This initial startup process
+takes a couple of seconds given the small scale at which we operate.</p>
+<p>Each model demarcates transactional boundaries and is the unit of consistency within the system. Commands and events on a single model are
+assumed to occur <em>sequentially</em>.</p>
+<h2 id="services">Services</h2>
+<p>Above <code>BusinessModel</code>s are <code>Service</code>s which provides the interface to the system. Services orchestrate the interactions of one or
+more Models. At the simplest level, a <code>Service</code> simply consists in the application of a single <code>Command</code> on some <code>BusinessModel</code>,
+but it can be more complex, synchronizing application of commands over several models. Based on the ideas exposed in
+<a href="http://adrianmarriott.net/logosroot/papers/LifeBeyondTxns.pdf">Life Beyond Distributed Transactions</a>, a <code>Service</code> represents the
+state of the interaction between a single user of the system, e.g.&nbsp;a request, and one or more piece of data maintained by the
+system.</p>
+<p>Because they are the agents of the outside world in the system, <code>Service</code>s operates in an impure context, hence in a dedicated <code>Monad</code>
+called <code>WebM</code>. Services typically return some representable type, when they are queries, or an <code>Event</code> denoting
+the outcome of the request. <code>WebM</code> is actually an instance of a monad transformer <code>WebStateM</code> over IO, hence it is impure. It has
+access to 2 pieces of state.</p>
+<p>Here is the definition of <code>WebStateM</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">WebStateM</span> shared local m a <span class="ot">=</span> <span class="dt">WebStateM</span> {<span class="ot"> runWebM ::</span> <span class="dt">TVar</span> shared <span class="ot">-&gt;</span> local <span class="ot">-&gt;</span> m a }</span>
+<span id="cb2-2"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">WebM</span> a <span class="ot">=</span> <span class="kw">forall</span> s <span class="op">.</span> <span class="dt">EventStore</span> s <span class="ot">=&gt;</span> <span class="dt">WebStateM</span> <span class="dt">SharedState</span> <span class="dt">LocalState</span> s a</span></code></pre></div>
+<p>This is simply a <code>Reader</code> monad with two different pieces of data:</p>
+<ul>
+<li><code>LocalState</code> is filled with information relevant to a single query (e.g.&nbsp;user id, request id, time…),</li>
+<li><code>SharedState</code> is a <code>TVar</code> (transaction variable living in <code>STM</code> monad) that is shared across all requests,</li>
+<li>The <code>EventStore</code> constraint means we need the underlying monad to provide access to persistent storage.</li>
+</ul>
+<p>The vast majority of services use the generic <code>applyCommand</code> function which is the critical part of the system. This function is
+responsible for:</p>
+<ul>
+<li>applying the command and updating the stored Model,</li>
+<li>persist the event in the “database”,</li>
+<li>dispatch the event to interested components.</li>
+</ul>
+<h2 id="web">Web</h2>
+<p>The REST interface is provided by <a href="https://github.com/scotty-web/scotty">scotty</a> which is a simple framework based on
+<a href="https://github.com/yesodweb/wai">WAI</a> and <a href="https://github.com/yesodweb/wai">warp</a><a href="https://abailly.github.io/posts/cm-arch-design.html#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. Most action handlers are pretty simple:</p>
+<ul>
+<li>They extract some parameters or JSON data from the body of the request,</li>
+<li>They invoke some service,</li>
+<li>They provide an HTTP response according to the result returned:
+<ul>
+<li>Queries simply serialize the result to JSON or other requested media type,</li>
+<li>Actions look at the returned <code>Event</code> to provide meaningful answers.</li>
+</ul></li>
+</ul>
+<p>On top of REST endpoints sit some <code>Middleware</code>s which check or apply transformations to requests and/or responses:</p>
+<ul>
+<li>Provide a <code>Request-Id</code> header,</li>
+<li>Authorisation and authentication,</li>
+<li>Sanity checks (e.g.&nbsp;sizes of payloads),</li>
+<li>Logging,</li>
+<li>Caching and static data service.</li>
+</ul>
+<h2 id="lost-in-translation">Lost in Translation</h2>
+<p>Executing a user-triggered action is in a sense a series of translations occuring between different <em>level of languages</em>:</p>
+<ul>
+<li>From REST to <code>WebM</code> we use <code>inWeb :: WebStateM CapitalMatchState LocalState m a -&gt; ActionT e (WebStateM CapitalMatchState   LocalState m) a</code>,</li>
+<li>From <code>WebM</code> to <code>STM Model</code> we use <code>liftIO . atomically</code>,</li>
+<li>… and finally in <code>Model</code> we reach the pure kernel of the business domain!</li>
+</ul>
+<p>Conceptually, we have this hierarchy of monads, expressed in types:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">model ::</span> <span class="dt">Command</span> <span class="ot">-&gt;</span> <span class="dt">StateT</span> <span class="dt">STM</span> <span class="dt">Model</span> (<span class="dt">Event</span> <span class="dt">Model</span>)</span>
+<span id="cb3-2"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ot">service ::</span> <span class="dt">WebM</span> (<span class="dt">Event</span> <span class="dt">Model</span>)</span>
+<span id="cb3-3"><a href="https://abailly.github.io/posts/cm-arch-design.html#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ot">web ::</span> <span class="dt">ActionT</span> ()</span></code></pre></div>
+<p>This hierarchy of monads delineates, somewhat obviously, the following languages:</p>
+<ul>
+<li>Language of <em>Models</em> expresses atomic (e.g.&nbsp;often CRUDesque) changes to a Model, like <code>RegisterTransaction</code>, <code>UpdateProfile</code> or <code>CloseFacility</code>,</li>
+<li>Language of <em>Services</em> expresses either direct changes to Models or more complex interactions like <code>addPledge</code> or <code>acceptFacility</code>
+which require more than one command to complete,</li>
+<li>Language of <em>Web</em> manages HTTP Requests and responses, JSON structures and delegate work to services. It is the language of
+representation of things.</li>
+</ul>
+<h1 id="cross-cutting-concerns">Cross-cutting Concerns</h1>
+<h2 id="concurrency">Concurrency</h2>
+<p>Concurrency is mostly handled at the REST layer through Warp and Scotty: Each request is handled concurrently by separate threads
+which are <a href="https://ghc.haskell.org/trac/ghc/wiki/LightweightConcurrency">very lightweight in Haskell/GHC</a>. On top of that we have a
+couple more threads in the application:</p>
+<ul>
+<li>One logging thread per handler (currently 2), which handle logging messages,</li>
+<li>A storage thread which handle low-level read/write requests to events file,</li>
+<li>A driver thread which handle events storage<a href="https://abailly.github.io/posts/cm-arch-design.html#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>,</li>
+<li>A <em>Heartbeat</em> thread periodically checks other threads and notifies health.</li>
+</ul>
+<p>We used to run directly threads with <code>forkIO</code> and friends but finally moved to something simpler and much more robust: The
+<a href="http://hackage.org/packages/async">async</a> package. Concurrent updates to the model are handled through
+<a href="http://hackage.org/packages/stm">Software Transactional Memory</a>: A <code>TVar</code> (transactional variable) holds a reference to the state
+and all operations on the state are thus transactional.</p>
+<p>The initial goal was to enforce a strict separation between the various <em>Business Models</em> with an eye towards being able to deploy
+them as independent services exchange messages. But it happened this rule was broken more than once and a few months later we ended
+up having built a monolith with uncontrolled dependencies across domains and layers. We then undertook the necessary refactoring
+steps to get back to a “saner” state where <code>STM</code> transactions operate at the level of a single <code>Command</code> through the <code>applyCommand</code>
+function.</p>
+<h2 id="persistence-and-storage">Persistence and Storage</h2>
+<p>Persistence is managed through a dedicated event bus: <code>Event</code> are first packaged into a more opaque <code>StoredEvent</code> object containing
+metadata useful for traceability of the system:</p>
+<ul>
+<li>An event version (more on this later)</li>
+<li>An event type which encodes at the value level the actual type of event</li>
+<li>Timestamp (in UTC)</li>
+<li>ID of user generating the event</li>
+<li>ID of original request</li>
+<li>SHA1 of commit, e.g.&nbsp;version of the code (thanks to <a href="http://geoffroycouprie.com/">Geoffroy Couprie</a> for the suggestion)</li>
+<li><code>ByteString</code> payload containing serialized version of the event</li>
+</ul>
+<p>Then <code>StoredEvent</code>s are pushed to a dedicated <code>Driver</code> thread which stores events in the underlying events file. Physical <code>Storage</code>
+is a simple append-only file which contains sequence of applied events serialized to some binary format
+(<a href="http://kafka.apache.org/">Kafka</a>-like). We are in the process of moving to a much more robust storage solution:</p>
+<ul>
+<li>externalize data store to another process/host,</li>
+<li>replicate it to increase fault-tolerance,</li>
+<li>provide strong consistency through distributed consensus.</li>
+</ul>
+<h3 id="event-versioning">Event Versioning</h3>
+<p>Events are stored with a <em>version</em> number which is a monotonically increasing number. This version number is bumped each time we
+change the structure of our events, e.g.&nbsp;adding a field to some record, changing a field’s type… When an event is persisted, it
+contains the <em>current version</em> number that’s defined in the application at that time. When the event is read back
+(i.e.&nbsp;deserialized) to rebuild the state of the system, this version number is used to select the correct read function.</p>
+<p>Hence modifying the structure of events always entails the following steps in development:</p>
+<ul>
+<li>Write deserialization test for current version number<a href="https://abailly.github.io/posts/cm-arch-design.html#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>,</li>
+<li>Bump version number,</li>
+<li>Write new code,</li>
+<li>Write <em>migration code</em> to adapt old events to new version.</li>
+</ul>
+<p>This mechanism adds some interesting properties to our underlying storage:</p>
+<ul>
+<li>Stored events are immutable hence storage system is append-only: We never need to rewrite past events,</li>
+<li>It is possible to rebuilt state of the system (code <em>and</em> data) at any point in the past.</li>
+</ul>
+<h2 id="user-interface">User Interface</h2>
+<p>UI code still lives partly in the server and partly as pure client-side code:</p>
+<ul>
+<li>HTML code is generated and served by the server using standard endpoints according to <code>Accept</code> header in request. We use
+<a href="https://hackage.haskell.org/package/blaze-html">blaze-html</a> combinators to describe the pages in Haskell,</li>
+<li>Static assets are served by <a href="https://hackage.haskell.org/package/wai-middleware-static">wai-middleware-static</a></li>
+</ul>
+<p>But the grunt of UI work is done on the client with <a href="https://github.com/omcljs/om/">Om</a>. Om is a
+<a href="http://github.com/clojure/clojurescript">clojurescript</a> interface to Facebook’s <a href="http://facebook.github.io/react/">React</a><a href="https://abailly.github.io/posts/cm-arch-design.html#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. We
+treat the UI-backend interaction as a pure client-server: UI maintains its own state and interact with server through usual Ajax
+calls, updating state accordingly. The interface a user sees is a single-page application.</p>
+<h2 id="logging-and-monitoring">Logging and Monitoring</h2>
+<p>There is a <code>Log</code> structure which is a queue consuming logging events and handling it according to some function. We log all
+queries, all commands issued and various other events occuring in the system: application startup/stop, heartbeat, I/O errors,
+storage events… In order to prevent sensitive data to leak to logging, we have a <code>redact</code> function that rewrites commands to
+remove those data before passing it to logging system.</p>
+<p>We currently have two different log backends:</p>
+<ul>
+<li>One log handler outputs JSON-formatted events to <code>stdout</code>,</li>
+<li>One log handler outputs some events to <a href="http://riemann.io/">Riemann</a>, using <a href="https://github.com/tel/riemann-hs">riemann-hs</a>. Those
+events are then used for notification and monitoring of infrastructure (more on this in a later post).</li>
+</ul>
+<p>At startup of application we also notify dev team by sending an email with the configuration. This is useful to check startup of
+production environment, as this email contains among other things the version of the application and the command line with which
+is has been started.</p>
+<h1 id="reflection">Reflection</h1>
+<p>It’s been a bit over a year since I have started working on Capital Match’s platform. I – we – have made mistakes, not everything
+went as smoothly as we would have liked and it is still just the beginning of a hopefully long adventure. One year is a good time to
+stop - or slow down a bit - and reflect on what’s been accomplished, what went wrong and what went well. In the next sections I try
+to provide a more or less objective assessment of the architecture we have put in place, and what would be our next steps.</p>
+<h2 id="the-good-the-bad-and-the-ugly">The Good, the Bad and the Ugly</h2>
+<p>We have been live since March 2015, serving more than S$ 3 millions - and counting - in facilities for SMEs in Singapore without any
+major interruption of service. This in itself is an extremely positive fact: It works and it supports continuous improvements in a
+smooth way<a href="https://abailly.github.io/posts/cm-arch-design.html#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>.</p>
+<p>Here are some benefits I see in our approach, encompassing both the technology used (Haskell, Om/Clojurescript) and the
+architecture:</p>
+<ul>
+<li>Strong and expressive types greatly improves confidence in the code<a href="https://abailly.github.io/posts/cm-arch-design.html#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>. Among the
+<a href="https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ghc-language-features.html">many features</a> supported by GHC, here
+are the ones, mostly simple and straightforward, we use routinely:
+<ul>
+<li><code>newtype</code>s are cheap in Haskell, being unpacked at runtime, but they are enforced during compilation and makes for very
+expressive signatures: No more <code>String</code>-based programs but <code>UserId</code>, <code>PassportNr</code> or <code>EMail</code>,</li>
+<li>Phantom types is a simple technique to distinguish between various objects with equivalent representations, like encoding of a
+<code>ByteString</code>,</li>
+<li>Type-classes are very useful to define interfaces, possibly with default implementations. Most of the time we use
+<code>MultiParamTypeClasses</code> to express relations between different part of the systems,</li>
+<li>Existential types are useful to <em>pack</em> related things under a common opaque type for e.g.&nbsp;serialization or logging, where you
+don’t care about the details,</li>
+<li>But most of the time using a simple type with a set of constructors is clearer.</li>
+</ul></li>
+<li>We use <code>-Wall -Werror</code> for compiling code which catches things like unused variables (dead code), variable names overriding
+(potential troubles), incomplete pattern matching (runtime failure ahead…),</li>
+<li>Event Sourcing greatly simplifies storage management and removes all the hassle of having to manage data types mapping to
+a relational model, not speaking of managing migration between versions or the burden of operating a DBMS,</li>
+<li>Because data is stored as a flat file of versioned events, querying the system can be done directly in Haskell: Retrieve event
+stream, build in-memory state from it then use GHCi or Emacs REPL to manipulate state<a href="https://abailly.github.io/posts/cm-arch-design.html#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> at your will. Over time we have written
+a number of <em>scripts</em> that are small Haskell programs implementing complex queries (e.g.&nbsp;user funnel) or programmatic one-shot
+transformations of data,</li>
+<li>Scotty, WAI and Warp makes it easy to quickly develop and maintain REST interfaces, both for endpoints and middlewares.</li>
+</ul>
+<p>Here are some mistakes I made:</p>
+<ul>
+<li>Too many use of partial functions like <code>fromJust</code> or even <code>head</code>: This makes things simple at first but of course blows up at
+runtime. Lesson learned: Always use <strong>total functions</strong>,</li>
+<li>Too many typeclasses: This might come from my Java background where using an interface is usually a good idea to abstract
+details. Over the time, we have created new typeclasses to answer to express new behaviour, which clutters types,</li>
+<li>Not taking enough care to keep compilation time low: Our application has grown over time, and I have not taken care of splitting it early enough to
+prevent bloat. Compilation time has grown over time to the point where it is now a problem. Lesson learned: Aggressively split
+code as early as possible, and don’t be afraid of having packages with one or two files,</li>
+<li>Too much reliance on <code>DeriveGeneric</code> based JSON serialization: Generating <code>Generic</code> instance for large types dramatically
+increases compilation time. Lesson learnt: Use more <code>TemplateHaskell</code> derivation or custom <code>ToJSON/FromJSON</code> instances which provide
+better flexibility<a href="https://abailly.github.io/posts/cm-arch-design.html#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></li>
+<li>Having data accessible only through Haskell implies non-tech people either need to learn it or go through the dev team to
+get data. This is not too much of a trouble in a very small team but could quickly become a problem as the company grows. This is
+where <a href="http://martinfowler.com/bliki/CQRS.html">CQRS</a> will nicely complement our Event Sourced system: It is a rather simple
+matter to build one or more relational models from our data and ensure the RDBMS is updated on a regular basis,</li>
+<li>Separation of concerns among the various business models has been sloppier over time, leading to too much coupling among the
+models,</li>
+<li>Events are not invertible which means that one cannot travel back and forth in an event stream easily to select required state,</li>
+<li>Generating HTML on the server-side: At the onset of the project, we had a static HTML file. We moved to server-side HTML
+generation using Blaze because we wanted to be able to control the structure of the HTML:
+<ul>
+<li>To cope for dev/prod environment on the front-end: Code is compiled and optimized differently in the two modes and this
+requires importing a different set of scripts,</li>
+<li>To manage <em>feature toggles</em> which allow us to provide a different UI for different users according to their account’s
+settings. This was very useful to handle gracefully migration of our UI,</li>
+<li>However this strategy entails a number of problems:
+<ul>
+<li>You sometimes have to recompile server when working on the UI, e.g.&nbsp;when changing structure of pages or handling of features,</li>
+<li>It’s hard to collaborate with front-end designers and developers,</li>
+<li>It makes UI and server more coupled,</li>
+</ul></li>
+</ul></li>
+<li>REST interface seems to be growing too quickly. There are some query abstractions that should be developed out of the raw
+endpoints we are exposing.</li>
+</ul>
+<h2 id="whats-next">What’s Next?</h2>
+<p>Within the span of a single year, much has happened in the Haskell ecosystem and things that were experimental or unwieldy one
+year ago are now mature and could easily make their way to production: <a href="https://github.com/ghcjs/ghcjs">ghcjs</a> is now much easier to
+build and work with, there are more mature solutions in the front-end like <a href="https://github.com/ryantrinkle/reflex">reflex</a>, build
+has never been easier thanks to <a href="https://github.com/commercialhaskell/stack/">stack</a>,
+<a href="https://downloads.haskell.org/~ghc/7.10.1/docs/html/users_guide/release-7-10-1.html">GHC 7.10</a> has brought a number of improvements
+(and controversial breaking changes like the TAP proposal)… Gabriel Gonzalez maintains a
+<a href="http://www.haskellforall.com/2015/08/state-of-haskell-ecosystem-august-2015.html">State of Haskell Ecosystem</a> page that provides
+interesting overview of what’s hot and what’s not in the Haskell world.</p>
+<p>Here are some major challenges that lie ahead of us to improve our system:</p>
+<ul>
+<li><strong>Services</strong>: In spite of good initial intention we still have built a monolith, albeit a small one and one that will be not
+too hard to split. We now want to increase robustness, resilience and scalability of our development process and our system by
+breaking the monolith into components services. We are in the process of splitting the application into smaller constituents along
+the following lines:
+<ul>
+<li>Glue code to wire things together in a single app,</li>
+<li>Support code,</li>
+<li>One component per group of related services,</li>
+<li>One component per “Model”, possibly clustered,</li>
+<li>Ideally each component should be deployable independently or alongside other components in the same process depending on needed
+granularity and redundancy. This can be achieved easily through configuration at the level of the glue code according to some
+topology configuration.</li>
+</ul></li>
+<li><strong>Performance</strong>: I tried to follow this simple development principle:
+<a href="http://c2.com/cgi/wiki?MakeItWorkMakeItRightMakeItFast">Make it, make it right, make it fast</a>. We mostly are done with the first
+part and are quite advanced on the second, so making it fast will be our next challenge especially as user base and data set grow
+in size. There are quite a few areas of improvement on the front: Caching computations, better data structures, improve strictness
+in key areas… But of course the first step will be to measure and set goals for those performance improvements.</li>
+<li><strong>Robustness</strong>: No system is ever safe from failure but it depends on us what the impact of a failure is. This is definitely a
+must-have and something we can improve using standard replication and redundancy techniques. Splitting the system in finer-grained
+components is a first step towards that goal but we need specific components to ensure consistency in presence of failure.</li>
+</ul>
+<h1 id="conclusion">Conclusion</h1>
+<p>This article is already quite long yet it is only a brief overview of our system: It is hard to summarize one year of intense work!
+In future installments of this blog post series I plan to address other aspects of the system that were not covered here:
+Development and production infrastructure, user interface development from the point of view of a backend developer, development
+process.</p>
+<p>As a final note, my highest gratitude goes to the following persons without the help of whom this adventure would not have been possible: Pawel
+Kuznicki, Chun Dong Chau, Pete Bonee, Willem van den Ende, Carlos Cunha, Guo Liang “Sark”
+Oon, Amar Potghan, Konrad Tomaszewski and all the great people at <a href="http://www.capital-match.com/">Capital Match</a>. I also would like
+to thank Corentin Roux-dit-Buisson, Neil Mitchell, Joey Hess for their support and feedback.</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1"><p>I have been using RDBMS since the 90’s, developed a point-of-sale application in Access, have been using PostgreSQL through
+its various versions since 1998, and recently worked on integrating DB migration process into a very large system. I am not
+an expert but I have had quite an extensive experience of relational databases over a significant number of years and I have always
+found that <em>writing</em> to DB quickly became a painful things.<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Although one could argue that there exists “languages” like Excel that allow you to write complex queries and explore data in
+a very sophisticated way without the use of SQL<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://haskell-servant.github.io/">Servant</a> is definitely on our roadmap.<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>This thread is pretty much redundant with storage thread for the moment. The plan is to use it for serialising
+<code>applyCommand</code> operations on the models<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>We use <a href="https://hackage.haskell.org/package/QuickCheck">QuickCheck</a> to generate a bunch of events for the type of interest.<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>It looks like our Om will be soon superceded by <a href="https://github.com/omcljs/om/wiki/Quick-Start-%28om.next%29">om.next</a><a href="https://abailly.github.io/posts/cm-arch-design.html#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p>I plan to provide more insights on our development and operations process in another blog post, but to give rough ideas we
+have deployed our application about a hundred times in the past 6 months.<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p>Having a strong type system is no replacement for a decent test suite however, because obviously a lot of bugs happen at the
+boundaries of the system, e.g.&nbsp;when invoking REST API.<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p>Obviously, this works as long as your data fits in memory. My bet is this will be the case for
+quite a long time. Shall this ever become a
+<a href="https://gettingreal.37signals.com/ch04_Scale_Later.php">problem</a>, we will most probably be in a position to handle it.<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p>This is the approach I took in <a href="https://github.com/capital-match/hdo/blob/master/src/Network/DO/Types.hs">hdo</a> because
+external representation was already defined, and in the end it makes encoding more explicit and easier to work with<a href="https://abailly.github.io/posts/cm-arch-design.html#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+
+<div id="disqus_recommendations" style="margin-bottom: 12px;"><iframe id="dsq-app8779" name="dsq-app8779" allowtransparency="true" frameborder="0" scrolling="no" tabindex="0" title="Disqus" width="100%" src="./HaskellApplication/saved_resource.html" style="width: 100% !important; border: none !important; overflow: hidden !important; height: 272px !important; display: inline !important; box-sizing: border-box !important;" horizontalscrolling="no" verticalscrolling="no"></iframe></div><div id="disqus_thread"><iframe id="dsq-app3402" name="dsq-app3402" allowtransparency="true" frameborder="0" scrolling="no" tabindex="0" title="Disqus" width="100%" src="./HaskellApplication/saved_resource(1).html" style="width: 1px !important; min-width: 100% !important; border: none !important; overflow: hidden !important; height: 377px !important;" horizontalscrolling="no" verticalscrolling="no"></iframe></div>
+<script>
+  (function() {  // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+  
+    s.src = '//arnaudsblog.disqus.com/embed.js';
+  
+    s.setAttribute('data-timestamp', +new Date());
+  (d.head || d.body).appendChild(s);
+  })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+    </div>
+    <footer>
+       <a href="https://fr.linkedin.com/in/arnaudbailly"> <img src="./HaskellApplication/linkedin.png" width="28"></a>  <a href="https://twitter.com/dr_c0d3"> <img width="32" src="./HaskellApplication/twitter.png"></a>  <a href="https://abailly.github.io/atom.xml"><img src="./HaskellApplication/feed-icon.svg" width="24px"></a>  <a href="http://jaspervdj.be/hakyll"><img src="./HaskellApplication/lambda.png" width="24px"></a>
+    </footer>
+
+  </div>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42631907-2', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+<iframe style="display: none;" src="./HaskellApplication/saved_resource(2).html"></iframe><iframe style="display: none;" src="./HaskellApplication/saved_resource(3).html"></iframe><iframe name="__launchpadLocator" style="display: none;" src="./HaskellApplication/saved_resource(4).html"></iframe></body><div style="all: initial;"><div id="__hcfy__" style="all: initial;"><template shadowrootmode="open"><style>#root{-webkit-text-size-adjust:100%;box-sizing:border-box;font-size:14px;font-weight:400;letter-spacing:0;line-height:1.28581;text-transform:none;color:#182026;font-family:-apple-system,"BlinkMacSystemFont","Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Open Sans","Helvetica Neue","Icons16",sans-serif;touch-action:manipulation}#root>.bp5-portal{z-index:9999999999}</style><link rel="stylesheet" href="chrome-extension://ikhdkkncnoglghljlkmcimlnlhkeamad/normalize.css"><link rel="stylesheet" href="chrome-extension://ikhdkkncnoglghljlkmcimlnlhkeamad/blueprint.css"><link rel="stylesheet" href="chrome-extension://ikhdkkncnoglghljlkmcimlnlhkeamad/blueprint-select.css"><link rel="stylesheet" href="chrome-extension://ikhdkkncnoglghljlkmcimlnlhkeamad/cropper.css"><style>#translate-panel{background-color:#f6f7f9;display:flex;flex-direction:column;padding-bottom:8px}.bp5-dark #translate-panel{background-color:#252a31}#translate-panel .fixed{flex-shrink:0;margin-bottom:10px}#translate-panel .body{flex-grow:1;overflow:auto;overscroll-behavior:contain}#translate-panel .body::-webkit-scrollbar{width:8px;background-color:rgba(0,0,0,0);-webkit-border-radius:100px}#translate-panel .body::-webkit-scrollbar:hover{background-color:rgba(0,0,0,.09)}#translate-panel .body::-webkit-scrollbar-thumb:vertical{background:rgba(0,0,0,.5);-webkit-border-radius:100px}#translate-panel .body::-webkit-scrollbar-thumb:vertical:active{background:rgba(0,0,0,.61);-webkit-border-radius:100px}#translate-panel.size-small,#translate-panel.size-small h6.bp5-heading,#translate-panel.size-small .bp5-control.bp5-large,#translate-panel.size-small textarea.bp5-input.bp5-small{font-size:14px}#translate-panel.size-small .phonetic-item,#translate-panel.size-small .quick-settings a{font-size:12px}#translate-panel.size-middle,#translate-panel.size-middle h6.bp5-heading,#translate-panel.size-middle .bp5-control.bp5-large,#translate-panel.size-middle textarea.bp5-input{font-size:18px}#translate-panel.size-middle .phonetic-item,#translate-panel.size-middle .quick-settings a{font-size:14px}#translate-panel.size-large,#translate-panel.size-large h6.bp5-heading,#translate-panel.size-large .bp5-control.bp5-large,#translate-panel.size-large textarea.bp5-input.bp5-large{font-size:22px}#translate-panel.size-large .source,#translate-panel.size-large .phonetic-item,#translate-panel.size-large .quick-settings a{font-size:18px}#translate-panel .bp5-button.bp5-small,#translate-panel .bp5-small .bp5-button{min-height:20px;min-width:20px}#translate-panel .header{display:flex;align-items:center;padding:4px 6px 4px 10px;border-bottom:1px solid #d1d1d1}.bp5-dark #translate-panel .header{border-bottom-color:rgba(17,20,24,.4)}#translate-panel .header .drag-block{min-width:5px;flex-shrink:0;flex-grow:1;align-self:stretch}#translate-panel .header .left{flex-shrink:0;display:flex}#translate-panel .header .right{flex-shrink:0;display:flex;align-items:center}#translate-panel .header .right .bp5-icon-arrow-right{flex-shrink:0;margin:0 5px}#translate-panel .header .right>.bp5-button{flex-shrink:0;margin:0 1px}#translate-panel .header .right>.bp5-button:last-child{margin-right:0}#translate-panel .quick-settings{padding:4px 9px;margin:0 1px}#translate-panel .quick-settings>div{margin-bottom:5px}#translate-panel .quick-settings .bp5-control{margin-bottom:0}#translate-panel .query-text{position:relative;padding:10px 10px 2px 10px}#translate-panel .query-text textarea.bp5-input{min-height:44px;font-family:system-ui,-apple-system,"Segoe UI","Roboto","Ubuntu","Cantarell","Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";overscroll-behavior:contain}#translate-panel .query-text .translate-btn{position:absolute;opacity:.6}#translate-panel .query-text .translate-btn:hover{opacity:1}#translate-panel .body{padding:0 10px}#translate-panel .body .bp5-card:first-child{margin-top:1px}#translate-panel .body .bp5-card:last-child{margin-bottom:1px}#translate-panel .body .no-api{margin:20px 0}.result-block{margin:8px 0;padding:2px 5px}.result-block .bp5-button{visibility:hidden}.result-block .error .bp5-button,.result-block:hover .bp5-button{visibility:visible}.result-block .legend{display:flex;align-items:center;justify-content:space-between}.result-block .legend .legend-left{display:flex;align-items:center}.result-block .legend .api-ico,.result-block .legend .bp5-heading{flex-shrink:0;white-space:nowrap}.result-block .legend .api-ico{display:inline-block;width:14px;height:14px;background-size:contain;margin-right:3px}.result-block .legend .bp5-heading{margin-bottom:0;margin-right:10px}.result-block .legend .source{cursor:pointer;font-size:12px;display:inline-flex;align-items:center}.result-block .legend .source .source-text{overflow:hidden}.result-block .legend .source .bp5-icon{position:relative;top:-1px;margin-left:1px}.result-block .phonetic{display:flex;flex-wrap:wrap}.result-block .phonetic .phonetic-item{display:flex;align-items:center;font-size:12px}.result-block .phonetic .phonetic-item:not(:last-child){margin-right:12px}.result-block .common-result p{line-height:1.3;margin:2px 0;overflow-wrap:break-word}.result-block .common-result .dict a{text-decoration:underline}.result-block .error{font-size:12px;padding:5px 10px}.result-block .dict-pos{margin-right:5px}.external-translators{margin-bottom:3px;padding:0;display:flex;flex-wrap:wrap}.external-translators>div{margin:0 5px 5px 0}.quick-links a{margin:0 5px 5px 0}#popper-container{width:250px;max-width:100%;position:absolute;left:0;top:0;z-index:9999999998;touch-action:none;transition:opacity .2s;background-color:#f6f7f9}.bp5-dark #popper-container{background-color:#252a31}#popper-container.show{opacity:1;pointer-events:auto;-moz-user-select:auto;user-select:auto}#popper-container,#popper-container[data-popper-reference-hidden=true]{opacity:0;pointer-events:none;-moz-user-select:none;user-select:none}#popper-container .drag-block{cursor:-webkit-grab;cursor:grab}#popper-container.pin{position:fixed}#popper-container.pin .arrow{display:none}#popper-container .arrow,#popper-container .arrow::before{position:absolute;width:8px;height:8px;z-index:-1}#popper-container .arrow::before{content:"";transform:rotate(45deg);background:#f6f7f9}.bp5-dark #popper-container .arrow::before{background-color:#252a31}#popper-container .arrow{display:none}#popper-container.show[data-popper-placement]:not([data-popper-reference-hidden=true]) .arrow{display:block}#popper-container[data-popper-placement^=top] .arrow{bottom:-5px}#popper-container[data-popper-placement^=top] .arrow::before{border-right:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1}#popper-container[data-popper-placement^=bottom] .arrow{top:-5px}#popper-container[data-popper-placement^=bottom] .arrow::before{border-left:1px solid #d1d1d1;border-top:1px solid #d1d1d1}#popper-container[data-popper-placement^=left] .arrow{right:-5px}#popper-container[data-popper-placement^=left] .arrow::before{border-right:1px solid #d1d1d1;border-top:1px solid #d1d1d1}#popper-container[data-popper-placement^=right] .arrow{left:-5px}#popper-container[data-popper-placement^=right] .arrow::before{border-left:1px solid #d1d1d1;border-bottom:1px solid #d1d1d1}#translate-btn{display:none;position:absolute;z-index:9999999999;left:0;top:0}#translate-btn .bp5-button{padding:2px;min-width:0;min-height:0}#translate-btn .btn-icon{width:18px;height:18px;background-image:url(chrome-extension://ikhdkkncnoglghljlkmcimlnlhkeamad/logo.png);background-size:contain}.bp5-dark #translate-btn .btn-icon{background-image:url(chrome-extension://ikhdkkncnoglghljlkmcimlnlhkeamad/logowhite36.png)}#translate-btn.show{display:block}.translate-type-selector .bp5-label{display:inline}.translate-type-selector .bp5-radio{margin-bottom:0}#ocr-container{position:fixed;z-index:99999999999999;left:0;top:0;right:0;bottom:0}#ocr-container .toolbar{display:none;position:absolute;z-index:1}#ocr-container img{max-width:100%}#app{cursor:default}.switch-pin{flex-shrink:0;cursor:pointer}.switch-pin .bp5-icon-pin{transition:transform .2s,color .2s;transform:rotate(-45deg)}.pin .switch-pin .bp5-icon-pin{transform:rotate(-70deg)}.cut-btn{margin-left:2px}.app-toaster-container{position:fixed !important;z-index:9999999999 !important}.app-toaster-container .bp5-toast{min-width:auto}#web-trs-panel .app-toaster-container{padding-right:0;padding-left:0}#web-trs-panel .page-trs-form-group{margin:0 0 0 0;align-items:center}#web-trs-panel .page-trs-form-group>label{width:70px}</style><div id="root" dir="ltr"><div id="app"><div id="translate-btn" style=""><button type="button" class="bp5-button"><span class="btn-icon"></span></button></div><div id="popper-container" class="pin bp5-elevation-4" style="width: 250px; transform: translate(0px, 0px);"><div id="translate-panel" class="size-small" style="max-height: 978px;"><div class="fixed"><div class="header"><div class="left"><div class="switch-pin"><button type="button" class="bp5-button bp5-active bp5-minimal bp5-small"><span aria-hidden="true" class="bp5-icon bp5-icon-pin"><svg data-icon="pin" height="14" role="img" viewBox="0 0 16 16" width="14"><path d="M9.41.92c-.51.51-.41 1.5.15 2.56L4.34 7.54C2.8 6.48 1.45 6.05.92 6.58l3.54 3.54-3.54 4.95 4.95-3.54 3.54 3.54c.53-.53.1-1.88-.96-3.42l4.06-5.22c1.06.56 2.04.66 2.55.15L9.41.92z" fill-rule="evenodd"></path></svg></span></button></div><button type="button" title="图片翻译" class="bp5-button bp5-minimal bp5-small"><span aria-hidden="true" class="bp5-icon bp5-icon-media"><svg data-icon="media" height="14" role="img" viewBox="0 0 16 16" width="14"><path d="M11.99 6.99c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm3-5h-14c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-10c0-.55-.45-1-1-1zm-1 9l-5-3-1 2-3-4-3 5v-7h12v7z" fill-rule="evenodd"></path></svg></span></button><button type="button" title="语音翻译" class="bp5-button bp5-minimal bp5-small"><span class="bp5-icon"><svg version="1.1" id="Capa_1" width="14" height="14" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 490.9 490.9" xml:space="preserve"><g><g><path d="M245.5,322.9c53,0,96.2-43.2,96.2-96.2V96.2c0-53-43.2-96.2-96.2-96.2s-96.2,43.2-96.2,96.2v130.5 C149.3,279.8,192.5,322.9,245.5,322.9z M173.8,96.2c0-39.5,32.2-71.7,71.7-71.7s71.7,32.2,71.7,71.7v130.5 c0,39.5-32.2,71.7-71.7,71.7s-71.7-32.2-71.7-71.7V96.2z"></path><path d="M94.4,214.5c-6.8,0-12.3,5.5-12.3,12.3c0,85.9,66.7,156.6,151.1,162.8v76.7h-63.9c-6.8,0-12.3,5.5-12.3,12.3 s5.5,12.3,12.3,12.3h152.3c6.8,0,12.3-5.5,12.3-12.3s-5.5-12.3-12.3-12.3h-63.9v-76.7c84.4-6.3,151.1-76.9,151.1-162.8 c0-6.8-5.5-12.3-12.3-12.3s-12.3,5.5-12.3,12.3c0,76.6-62.3,138.9-138.9,138.9s-138.9-62.3-138.9-138.9 C106.6,220,101.2,214.5,94.4,214.5z"></path></g></g></svg></span></button></div><div class="drag-block" title="按住不放可以拖动"></div><div class="right"><button type="button" disabled="" title="添加到收藏夹" class="bp5-button bp5-disabled bp5-minimal bp5-small" tabindex="-1"><span aria-hidden="true" class="bp5-icon bp5-icon-star-empty"><svg data-icon="star-empty" height="14" role="img" viewBox="0 0 16 16" width="14"><path d="M16 6.11l-5.53-.84L8 0 5.53 5.27 0 6.11l4 4.1L3.06 16 8 13.27 12.94 16 12 10.21l4-4.1zM4.91 13.2l.59-3.62L3 7.02l3.45-.53L8 3.2l1.55 3.29 3.45.53-2.5 2.56.59 3.62L8 11.49 4.91 13.2z" fill-rule="evenodd"></path></svg></span></button><button type="button" class="bp5-button bp5-minimal bp5-small settings" title="快捷设置"><span aria-hidden="true" class="bp5-icon bp5-icon-cog"><svg data-icon="cog" height="14" role="img" viewBox="0 0 16 16" width="14"><path d="M15.19 6.39h-1.85c-.11-.37-.27-.71-.45-1.04l1.36-1.36c.31-.31.31-.82 0-1.13l-1.13-1.13a.803.803 0 00-1.13 0l-1.36 1.36c-.33-.17-.67-.33-1.04-.44V.79c0-.44-.36-.8-.8-.8h-1.6c-.44 0-.8.36-.8.8v1.86c-.39.12-.75.28-1.1.47l-1.3-1.3c-.3-.3-.79-.3-1.09 0L1.82 2.91c-.3.3-.3.79 0 1.09l1.3 1.3c-.2.34-.36.7-.48 1.09H.79c-.44 0-.8.36-.8.8v1.6c0 .44.36.8.8.8h1.85c.11.37.27.71.45 1.04l-1.36 1.36c-.31.31-.31.82 0 1.13l1.13 1.13c.31.31.82.31 1.13 0l1.36-1.36c.33.18.67.33 1.04.44v1.86c0 .44.36.8.8.8h1.6c.44 0 .8-.36.8-.8v-1.86c.39-.12.75-.28 1.1-.47l1.3 1.3c.3.3.79.3 1.09 0l1.09-1.09c.3-.3.3-.79 0-1.09l-1.3-1.3c.19-.35.36-.71.48-1.1h1.85c.44 0 .8-.36.8-.8v-1.6a.816.816 0 00-.81-.79zm-7.2 4.6c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" fill-rule="evenodd"></path></svg></span></button><button type="button" title="关闭(Esc)" class="bp5-button bp5-minimal bp5-small"><span aria-hidden="true" class="bp5-icon bp5-icon-cross"><svg data-icon="cross" height="18" role="img" viewBox="0 0 16 16" width="18"><path d="M9.41 8l3.29-3.29c.19-.18.3-.43.3-.71a1.003 1.003 0 00-1.71-.71L8 6.59l-3.29-3.3a1.003 1.003 0 00-1.42 1.42L6.59 8 3.3 11.29c-.19.18-.3.43-.3.71a1.003 1.003 0 001.71.71L8 9.41l3.29 3.29c.18.19.43.3.71.3a1.003 1.003 0 00.71-1.71L9.41 8z" fill-rule="evenodd"></path></svg></span></button></div></div><div class="bp5-collapse"><div class="bp5-collapse-body" aria-hidden="true"><div class="quick-settings bp5-card bp5-elevation-0"><div><span aria-controls="listbox-0" aria-expanded="false" aria-haspopup="listbox" class="lang-select bp5-popover-target" role="combobox"><button type="button" class="bp5-button bp5-small"><span class="bp5-button-text">自动检测</span><span aria-hidden="true" class="bp5-icon bp5-icon-caret-down"><svg data-icon="caret-down" height="16" role="img" viewBox="0 0 16 16" width="16"><path d="M12 6.5c0-.28-.22-.5-.5-.5h-7a.495.495 0 00-.37.83l3.5 4c.09.1.22.17.37.17s.28-.07.37-.17l3.5-4c.08-.09.13-.2.13-.33z" fill-rule="evenodd"></path></svg></span></button></span><span aria-hidden="true" class="bp5-icon bp5-icon-arrow-right" style="margin: 0px 10px;"><svg data-icon="arrow-right" height="12" role="img" viewBox="0 0 16 16" width="12"><path d="M14.7 7.29l-5-5a.965.965 0 00-.71-.3 1.003 1.003 0 00-.71 1.71l3.29 3.29H1.99c-.55 0-1 .45-1 1s.45 1 1 1h9.59l-3.29 3.29a1.003 1.003 0 001.42 1.42l5-5c.18-.18.29-.43.29-.71s-.12-.52-.3-.7z" fill-rule="evenodd"></path></svg></span><span aria-controls="listbox-1" aria-expanded="false" aria-haspopup="listbox" class="lang-select bp5-popover-target" role="combobox"><button type="button" class="bp5-button bp5-small"><span class="bp5-button-text">中文(简体)</span><span aria-hidden="true" class="bp5-icon bp5-icon-caret-down"><svg data-icon="caret-down" height="16" role="img" viewBox="0 0 16 16" width="16"><path d="M12 6.5c0-.28-.22-.5-.5-.5h-7a.495.495 0 00-.37.83l3.5 4c.09.1.22.17.37.17s.28-.07.37-.17l3.5-4c.08-.09.13-.2.13-.33z" fill-rule="evenodd"></path></svg></span></button></span></div><div><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox" checked=""><span class="bp5-control-indicator"></span>谷歌</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox" checked=""><span class="bp5-control-indicator"></span>DeepL</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>ChatGPT</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>Yandex</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>百度</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>百度(专业版)</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>腾讯</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>彩云</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>阿里</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>阿里(专业版)</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>有道</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>火山</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox" checked=""><span class="bp5-control-indicator"></span>必应词典</label><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>搜狗</label></div><div><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>自动朗读</label><span aria-expanded="false" aria-haspopup="true" class="bp5-popover-target"><label class="bp5-control bp5-checkbox bp5-disabled bp5-inline"><input disabled="" tabindex="0" type="checkbox"><span class="bp5-control-indicator"></span>自动复制</label></span></div><div class="bp5-radio-group"><label class="bp5-control bp5-radio bp5-inline"><input name="Blueprint5.RadioGroup-0" type="radio" value="small" checked=""><span class="bp5-control-indicator"></span>小</label><label class="bp5-control bp5-radio bp5-inline"><input name="Blueprint5.RadioGroup-0" type="radio" value="middle"><span class="bp5-control-indicator"></span>中</label><label class="bp5-control bp5-radio bp5-inline"><input name="Blueprint5.RadioGroup-0" type="radio" value="large"><span class="bp5-control-indicator"></span>大</label></div><div><label class="bp5-control bp5-checkbox bp5-inline"><input type="checkbox"><span class="bp5-control-indicator"></span>显示文本框</label><label class="bp5-control bp5-checkbox bp5-inline" style="margin-right: 0px;"><input type="checkbox"><span class="bp5-control-indicator"></span>鼠标悬浮取词</label></div><a class="bp5-text-small">打开完整设置</a><a class="bp5-text-small" style="margin-left: 15px;"><span aria-hidden="true" class="bp5-icon bp5-icon-crown" style="position: relative; top: -1px;"><svg data-icon="crown" height="14" role="img" viewBox="0 0 16 16" width="14"><path d="M2 6l3 2 3-4 3 4 3-2-1 6H3L2 6zm6-5a1 1 0 110 2 1 1 0 010-2zM1 3a1 1 0 110 2 1 1 0 010-2zm14 0a1 1 0 110 2 1 1 0 010-2zM3 13h10v2H3v-2z" fill-rule="evenodd"></path></svg></span> 开通会员</a></div></div></div></div><div class="body"><p>请输入需要翻译的文本。</p></div></div><div class="arrow"></div></div><div id="web-trs-panel"></div></div></div></template></div></div><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;limited&quot;,&quot;isActive&quot;:false,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>
