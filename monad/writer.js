@@ -48,36 +48,36 @@
 // // }
 
 
-function writer(val) {
-    return [val, '']
-}
+// function writer(val) {
+//     return [val, '']
+// }
 
-function WriterMonad(writer) {
-  writer.fmap = function(func){
-    return WriterMonad(func(val) {
-        result = writer(val);
-        val1 = func(result[0]);
-        return [val1, result[1] + '' + val1];
-    })
-  }
-  writer.applying = function(otherWriter){
-    return WriterMonad(func(val) {
-        result = writer(val);
-        val1 = func(result[0]);
-        return [val1, result[1] + '' + val1];
-    })
-  }
-  writer.bind = function(lifter){
-    return WriterMonad(func(val) {
-        result = writer(val);
-        result1 = lifter(result[0]);
-        return [result1[0], result[1] + '' + result1[1]];
-    })
-  }
-  return writer
-}
+// function WriterMonad(writer) {
+//   writer.fmap = function(func){
+//     return WriterMonad(func(val) {
+//         result = writer(val);
+//         val1 = func(result[0]);
+//         return [val1, result[1] + '' + val1];
+//     })
+//   }
+//   writer.applying = function(otherWriter){
+//     return WriterMonad(func(val) {
+//         result = writer(val);
+//         val1 = func(result[0]);
+//         return [val1, result[1] + '' + val1];
+//     })
+//   }
+//   writer.bind = function(lifter){
+//     return WriterMonad(func(val) {
+//         result = writer(val);
+//         result1 = lifter(result[0]);
+//         return [result1[0], result[1] + '' + result1[1]];
+//     })
+//   }
+//   return writer
+// }
 
-writerID(1).applying(writerID(debugCube)).fmap(debugTwice).fmap(debugSquare)(log)
+// writerID(1).applying(writerID(debugCube)).fmap(debugTwice).fmap(debugSquare)(log)
 
 // function toCont(setter) {
 //     return WriterMonad(function(v) {
@@ -92,6 +92,99 @@ writerID(1).applying(writerID(debugCube)).fmap(debugTwice).fmap(debugSquare)(log
 // https://blog.jcoglan.com/2011/03/05/translation-from-haskell-to-javascript-of-selected-portions-of-the-best-introduction-to-monads-ive-ever-read/
 // http://blog.sigfpe.com/2006/08/you-could-have-invented-monads-and.html
 // https://stackoverflow.com/questions/2704652/monad-in-plain-english-for-the-oop-programmer-with-no-fp-background
+// https://mqcreaple.github.io/blog/2022/09/02/y-combinator.html
+// https://juejin.cn/post/7271597656119476243
+// https://2ality.com/p/about.html
+
+
+func lift(f) {
+    return function(val) {
+        val = f(val)
+        return function(w) {
+            w(val, string(val))
+        }
+    }
+}
+
+function a(val) {
+    return (val, log);
+}
+
+function b(val) {
+    return (val, log);
+}
+
+function c(f) {
+    return function(val1, log1) {
+        (val2, log2) = f(val1)
+        return (val2, log1 + log2)
+    }
+}
+
+
+function toCont(func) {
+    return WriterMonad(function(v) {
+        return function(w) {
+            w(func(v), 'is ' + func(v))
+        }
+    });
+}
+
+function unit(v) {
+    return v;
+}
+
+function mmm(func2) {
+    return function lll(func) {
+        return WriterMonad(function(v) {
+            return function(w) {
+                w(func2(v), 'is ' + func2(v))
+            }
+        });
+    }    
+}
+
+
+function WriterMonad(cont) {
+  cont.fmap = function(func){
+    return WriterMonad(function(v) {
+        return function(w) {
+            cont(func(v))(w)
+        }
+    });
+  }
+  cont.applying = function(otherCont){
+    return WriterMonad(function(v) {
+        return function(w) {
+            cont(v)(function(v2, log1){
+                otherCont(v2)(function(v3, log2){
+                    w(v3, log1 + log2)
+                })
+            })
+        }
+    });
+  }
+  cont.bind = function(func){
+    return WriterMonad(function(v) {
+        return function(w) {
+            cont(v)(function(v2, log1){
+                func(unit)(v2)(function(v3, log2){
+                    w(v3, log1 + log2)
+                })
+            })
+            // func(v)()
+            // func(v)(function(v2) {
+            //     return function(w2) {
+            //         w2(v2, 'is ' + func(v))
+            //     }
+            //     cont(v2)(w)
+            // })
+        }
+    });
+  }
+  return cont
+}
+
 
 
 // function toCont(func) {
