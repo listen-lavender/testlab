@@ -1,0 +1,6 @@
+[package]
+name = "X00065_fatpointer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
