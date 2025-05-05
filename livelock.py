@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import threading
 
 # 共享资源
@@ -7,7 +8,9 @@ lock2 = threading.Lock()
 
 def worker1():
     while True:
-        lock1.acquire()
+        if not lock1.acquire(False):
+            print("Worker1 未获取 lock1")
+            continue
         print("Worker1 获取 lock1")
         if lock2.acquire(False):  # 非阻塞尝试获取lock2
             print("Worker1 获取 lock2，完成任务")
@@ -20,7 +23,9 @@ def worker1():
 
 def worker2():
     while True:
-        lock2.acquire()
+        if not lock2.acquire(False):
+            print("Worker12 未获取 lock2")
+            continue
         print("Worker2 获取 lock2")
         if lock1.acquire(False):  # 非阻塞尝试获取lock1
             print("Worker2 获取 lock1，完成任务")
