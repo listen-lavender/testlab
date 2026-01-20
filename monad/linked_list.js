@@ -2,16 +2,19 @@
 const pair = a => b => f => f(a)(b);
 
 // 访问第一个元素
-const first = p => p(a => b => a);
+const first = paired => paired(a => b => a);
 
 // 访问第二个元素
-const second = p => p(a => b => b);
+const second = paired => paired(a => b => b);
 
 // 创建单向链表节点（只包含值和后继节点）
+// const pair2 = a => b => pair(a)(b);
 const makeNode = value => next => pair(value)(next);
 
 // 获取节点值
-const getValue = node => first(node);
+// const getValue = paired => first(paired);
+// const first = paired => paired(a => b => a);
+const getValue = paired => paired(a => b => a);
 
 // 获取后继节点
 const getNext = node => second(node);
@@ -98,11 +101,21 @@ const deleteTail = head => {
 
 // 测试
 const test = () => {
+  console.log(first(pair(1)(pair(2)(pair(3)(pair(5)(pair(6)(null)))))));
+  console.log(first(second(pair(1)(pair(2)(pair(3)(pair(5)(pair(6)(null))))))));
+  console.log(first(second(second(pair(1)(pair(2)(pair(3)(pair(5)(pair(6)(null)))))))));
+  console.log(first(second(second(second(pair(1)(pair(2)(pair(3)(pair(4)(pair(5)(null))))))))));
   // 创建链表: 10 -> 20 -> 30 -> 40
-  let list = emptyList();
-  list = insertTail(list)(10);
+  // let list = emptyList();
+  let list = pair(10)(null);
+  console.log(isEmpty(list), '<<<<<');
+  // list = insertHead(list)(10);  // 在头部插入10
+  // list = insertHead(list)(20);  // 在头部插入20
+  // list = insertHead(list)(30);  // 在头部插入30
+  // list = insertHead(list)(40);  // 在头部插入40
+  // list = insertTail(list)(10);
   list = insertTail(list)(20);
-  list = insertHead(list)(30);  // 在头部插入30
+  list = insertTail(list)(30);
   list = insertTail(list)(40);
   
   console.log("原始链表遍历:", traverseForward(list));  // [30, 10, 20, 40]
