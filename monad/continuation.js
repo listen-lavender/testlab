@@ -21,17 +21,35 @@
 
 
 const f = x=>x * x;
-console.log(f(4));     // prints 16
+// console.log(f(4));     // prints 16
 
 const f1 = (x, callback)=>callback(x*x);
 
-f1(4, console.log);
+// f1(4, console.log);
 
 const squareCont = x=>callback=>callback(x*x);
 
-squareCont(4)(console.log);
+// squareCont(4)(console.log);
 
 // const toCont = v=>callback=>callback(v);
+
+// // Continuation Monad构造函数
+// const Cont = run => ({
+//     // 运行延续
+//     runCont: run,
+    
+//     // Monad的chain操作（也称为bind或flatMap）
+//     chain: f => Cont(k => run(x => f(x).runCont(k))),
+    
+//     // Functor的map操作
+//     map: f => this.chain(x => Cont.of(f(x)))
+// })
+
+// // of方法（也称为pure或return）
+// Cont.of = x => Cont(k => k(x))
+
+// // callWithCurrentContinuation (call/cc)实现
+// Cont.callCC = f => Cont(k => f(a => Cont(_ => k(a))).runCont(k))
 
 function toCont(v) {
   return ContinuationMonad(function(callback) {
@@ -61,13 +79,64 @@ function ContinuationMonad(cont) {
   cont.bind = function(func){
     return ContinuationMonad(function(callback) {
         cont(function(v){
-             console.log("=======", v);
+             console.log("=======def", v);
+             console.log("=======abc", func(v));
              func(v)(callback)
         })
     })
   }
   return cont
 }
+
+ContinuationMonad.of = function(v) {
+    return ContinuationMonad(function(callback) {
+        callback(v)
+    })
+}
+
+ContinuationMonad.callCC = function(func){
+    return ContinuationMonad(function(callback1){
+        exit = function(a){
+            console.log("======a", a)
+            return ContinuationMonad(function(callback2){
+                console.log("======b", callback2)
+                console.log("======k", callback1)
+                callback1(a)
+            })
+        }
+        monad = func(exit)
+        monad(callback1)
+    })
+}
+
+const example2 = ContinuationMonad.callCC(exit => 
+    ContinuationMonad.of(10)
+        .bind(x => ContinuationMonad.of(x + 100)) // 这行不会执行
+        .bind(x => exit(x * 2))  // 这里会提前退出
+        .bind(x => ContinuationMonad.of(x + 100)) // 这行不会执行
+)
+
+example2(console.log) // 输出: 20 (而不是120)
+
+// 使用call/cc实现类似try-catch的控制流
+const tryDivide = (a, b) => ContinuationMonad.callCC(exit => 
+    b === 0 
+        ? exit("除数不能为零") 
+        : ContinuationMonad.of(a / b)
+)
+
+const computation = tryDivide(10, 2)
+    .bind(result => ContinuationMonad.of(`结果是: ${result}`))
+    .bind(console.log)
+
+computation(console.log) // 输出: "结果是: 5"
+
+const errorComputation = tryDivide(10, 0)
+    .bind(result => ContinuationMonad.of(`结果是: ${result}`))
+    .bind(console.log)
+
+errorComputation(console.log) // 输出: "除数不能为零"
+
 
 // function toCont(v) {
 //   return function(callback) {
@@ -112,6 +181,7 @@ function ContinuationMonad(cont) {
 // contComposition4(console.log);
 
 toCont(4).bind(y => toCont((x => x + " hello")(y))).bind(y => toCont((x => x + " world")(y))).bind(y => toCont((x => x.length)(y)))(console.log);
+toCont(4).bind(y => toCont(y + " hello")).bind(y => toCont(y + " world")).bind(y => toCont(y.length))(console.log);
 
 
 // var contCompositiona = fmap(toCont(4), x => x + " hello");

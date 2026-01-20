@@ -34,10 +34,14 @@ const insertHead = list => value =>
   list === null 
     ? makeNode(null)(value)(null)
     : (() => {
-        const newHead = makeNode(null)(value)(list);
-        const updatedSecond = setPrev(list)(newHead);
-        return setNext(newHead)(updatedSecond);
+        // const newHead = makeNode(null)(value)(list);
+        // const updatedSecond = setPrev(list)(newHead);
+        // return setNext(newHead)(updatedSecond);
+        return setNext(makeNode(null)(value)(list))(setPrev(list)(makeNode(null)(value)(list)));
       })();
+
+// let list = emptyList();
+// list = insertHead(list)(10);
 
 // 在尾部插入节点（纯函数式递归版本）
 const insertTail = list => value => {
